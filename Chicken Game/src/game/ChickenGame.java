@@ -27,40 +27,42 @@ import sage.scene.shape.Line;
 public class ChickenGame extends BaseGame{
 
 	private MyCharacter player;
-	
+
 	private ICamera camera;
 	private Camera3Pcontroller cc;
 	private IRenderer renderer;
 	private IDisplaySystem display;
 
 	private IEventManager eventMgr;
-	
+
 	private IInputManager im;
 	private String gpName;
 	private String kpName;
-	
+
+	private boolean displayAxis = true;
+
 	protected void initGame(){
-		
+
 		initDisplay();
 		im = getInputManager();
 		gpName = im.getFirstGamepadName();
 		kpName = im.getKeyboardName();
-		
-		
+
+
 
 		initGameObjects();
 		initHUD();
 		initPlayers();
 		initInput();
 
-		
+
 	}
 
 	private void initDisplay() {		
 		display = createDisplaySystem(); 
 		setDisplaySystem(display); 
 		renderer = display.getRenderer();
-		
+
 	}
 
 	private void initInput() {
@@ -104,7 +106,7 @@ public class ChickenGame extends BaseGame{
 				net.java.games.input.Component.Identifier.Key.ESCAPE, ESCAPE,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
-		
+
 	}
 
 	private void initPlayers() {
@@ -117,43 +119,44 @@ public class ChickenGame extends BaseGame{
 		camera.setPerspectiveFrustum(60, 2, 1, 1000); 
 		cc = new Camera3Pcontroller(camera, player, im, gpName);
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private void initHUD() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private void initGameObjects() {
 		display = getDisplaySystem();
 		// TODO Auto-generated method stub
-		
-		
-		Point3D origin = new Point3D(0,0,0);
-		Point3D xEnd = new Point3D(100,0,0);
-		Point3D yEnd = new Point3D(0,100,0);
-		Point3D zEnd = new Point3D(0,0,100);
-		Line xAxis = new Line (origin, xEnd, Color.red, 2);
-		Line yAxis = new Line (origin, yEnd, Color.green, 2);
-		Line zAxis = new Line (origin, zEnd, Color.blue, 2);
-		addGameWorldObject(xAxis); 
-		addGameWorldObject(yAxis);
-		addGameWorldObject(zAxis);
-		
+
+		if(displayAxis  == true){
+			Point3D origin = new Point3D(0,0,0);
+			Point3D xEnd = new Point3D(100,0,0);
+			Point3D yEnd = new Point3D(0,100,0);
+			Point3D zEnd = new Point3D(0,0,100);
+			Line xAxis = new Line (origin, xEnd, Color.red, 2);
+			Line yAxis = new Line (origin, yEnd, Color.green, 2);
+			Line zAxis = new Line (origin, zEnd, Color.blue, 2);
+			addGameWorldObject(xAxis); 
+			addGameWorldObject(yAxis);
+			addGameWorldObject(zAxis);
+		}
+
 	}
-	
-	
+
+
 	public void update(float elapsedTimeMS){
 		cc.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
 	}
-	
+
 	protected void render() { 
 		renderer.setCamera(camera); 
 		super.render(); 
 	}
-	
+
 	private IDisplaySystem createDisplaySystem() { 
 		IDisplaySystem display = new MyDisplaySystem(700, 300, 24, 20, true, "sage.renderer.jogl.JOGLRenderer"); 
 		System.out.print("\nWaiting for display creation..."); 

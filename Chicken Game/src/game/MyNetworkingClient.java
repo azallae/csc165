@@ -6,14 +6,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import game.network.GameClientTCP;
 import graphicslib3D.Vector3D;
 import sage.networking.IGameConnection.ProtocolType;
+import sage.scene.SceneNode;
 
 public class MyNetworkingClient extends ChickenGame{
 	private String serverAddress;
 	private int serverPort;
 	private ProtocolType serverProtocol;
-	private MyClient thisClient;
+	private GameClientTCP thisClient;
 	// assumes main() gets address/port from command line
 	public MyNetworkingClient(String serverAddr, int sPort)	{ 
 		super();
@@ -23,7 +25,7 @@ public class MyNetworkingClient extends ChickenGame{
 	}
 	protected void initGame(){ // items as before, plus initializing network:
 		try{
-			thisClient = new MyClient(InetAddress.getByName(serverAddress),
+			thisClient = new GameClientTCP(InetAddress.getByName(serverAddress),
 					serverPort, serverProtocol, this); 
 		}
 		catch (UnknownHostException e) {
@@ -61,5 +63,12 @@ public class MyNetworkingClient extends ChickenGame{
 	public Vector3D getPlayerPosition() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	public void addGameWorldObject(SceneNode s) {
+		super.addGameWorldObject(s);
+	}
+	
+	public boolean removeGameWorldObject(SceneNode s) {
+		return super.removeGameWorldObject(s);
 	}
 }

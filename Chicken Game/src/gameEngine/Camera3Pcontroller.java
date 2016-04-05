@@ -58,6 +58,11 @@ public class Camera3Pcontroller {
 				net.java.games.input.Component.Identifier.Axis.RX,
 				turnLR,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN); 
+		IAction zoomIO = new ZoomIO();
+		im.associateAction(cn,
+				net.java.games.input.Component.Identifier.Axis.RY,
+				zoomIO, 
+				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		IAction orbitActionLeft = new OrbitAroundActionLeft();
 		im.associateAction(cn, 
 				net.java.games.input.Component.Identifier.Key.LEFT, 
@@ -77,11 +82,6 @@ public class Camera3Pcontroller {
 		im.associateAction(cn, 
 				net.java.games.input.Component.Identifier.Key.DOWN,
 				zoomOut,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		IAction zoomIO = new ZoomIO();
-		im.associateAction(cn,
-				net.java.games.input.Component.Identifier.Axis.RY,
-				zoomIO, 
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		IAction toggleDetached = new ToggleDetached();
 		im.associateAction(cn, 
