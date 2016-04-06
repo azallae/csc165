@@ -77,9 +77,9 @@ public class ChickenGame extends BaseGame{
 		kpName = im.getKeyboardName();
 
 
+		createScene();
 
 		initTerrain();
-		createScene();
 		initGameObjects();
 		initHUD();
 		initPlayers();
@@ -91,7 +91,6 @@ public class ChickenGame extends BaseGame{
 	private void createScene(){
 		//rootNode = new Group("Root Node");
 		skyBox = new SkyBox("world");
-      		skyBox.setZBufferStateEnabled(false);
       		skyBox.scale(50.0f, 50.0f, 50.0f);
 		Texture w1 = TextureManager.loadTexture2D(textures + "SkyBox1.jpg");
 		Texture w2 = TextureManager.loadTexture2D(textures + "SkyBox2.jpg");
@@ -293,13 +292,13 @@ public class ChickenGame extends BaseGame{
 	}
 	private TerrainBlock createTerBlock(AbstractHeightMap heightMap){
 		float heightScale = .005f;
-		Vector3D terrainScale = new Vector3D(.2, heightScale, .2);
+		Vector3D terrainScale = new Vector3D(.5, heightScale, .5);
 		// use the size of the height map as the size of the terrain
 		int terrainSize = heightMap.getSize();
 		// specify terrain origin so heightmap (0,0) is at world origin
 		float cornerHeight =
 				heightMap.getTrueHeightAtPoint(0, 0) * heightScale;
-		Point3D terrainOrigin = new Point3D(0, -cornerHeight, 0);
+		Point3D terrainOrigin = new Point3D(-100, -cornerHeight, -100);
 		// create a terrain block using the height map
 		String name = "Terrain:" + heightMap.getClass().getSimpleName();
 		TerrainBlock tb = new TerrainBlock(name, terrainSize, terrainScale,
