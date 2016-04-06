@@ -22,7 +22,8 @@ public class Starter {
 		}
 		else{
 			System.out.print("You are a client.");
-			
+			MyNetworkingGame testTCPClient = new MyNetworkingGame("130.86.96.232", localPort);
+			testTCPClient.start();
 		}
 	}
 }
