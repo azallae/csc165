@@ -6,7 +6,7 @@ var JavaPackages = new JavaImporter(
 with (JavaPackages)
 {
 var rootNode = new Group();
-var displayAxis = false;
+var displayAxis = true;
 var origin = new Point3D(0,0,0);
 var xEnd = new Point3D(20,0,0);
 var yEnd = new Point3D(0,20,0);
