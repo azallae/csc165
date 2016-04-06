@@ -75,7 +75,7 @@ public class ChickenGame extends BaseGame{
 
 
 
-//		initTerrain();
+		initTerrain();
 		initGameObjects();
 		initHUD();
 		initPlayers();
@@ -242,14 +242,14 @@ public class ChickenGame extends BaseGame{
 	}
 
 
-/*	private void initTerrain()
+	private void initTerrain()
 	{ // create height map and terrain block
 		ImageBasedHeightMap myHeightMap =
 				new ImageBasedHeightMap("height.jpg");
 		TerrainBlock imageTerrain = createTerBlock(myHeightMap);
 		// create texture and texture state to color the terrain
 		TextureState grassState;
-		Texture grassTexture = TextureManager.loadTexture2D("grass.jpg");
+		Texture grassTexture = TextureManager.loadTexture2D("perfect-cloud.jpg");
 		grassTexture.setApplyMode(sage.texture.Texture.ApplyMode.Replace);
 		grassState = (TextureState)
 				display.getRenderer().createRenderState(RenderStateType.Texture);
@@ -259,19 +259,19 @@ public class ChickenGame extends BaseGame{
 		imageTerrain.setRenderState(grassState);
 		addGameWorldObject(imageTerrain);
 	}
-	private TerrainBlock createTerBlock(AbstractHeightMap heightMap)
-	{ float heightScale = .005f;
-	Vector3D terrainScale = new Vector3D(.2, heightScale, .2);
-	// use the size of the height map as the size of the terrain
-	int terrainSize = heightMap.getSize();
-	// specify terrain origin so heightmap (0,0) is at world origin
-	float cornerHeight =
-			heightMap.getTrueHeightAtPoint(0, 0) * heightScale;
-	Point3D terrainOrigin = new Point3D(0, -cornerHeight, 0);
-	// create a terrain block using the height map
-	String name = "Terrain:" + heightMap.getClass().getSimpleName();
-	TerrainBlock tb = new TerrainBlock(name, terrainSize, terrainScale,
-			heightMap.getHeightData(), terrainOrigin);
-	return tb;
-	}*/
+	private TerrainBlock createTerBlock(AbstractHeightMap heightMap){
+		float heightScale = .005f;
+		Vector3D terrainScale = new Vector3D(.2, heightScale, .2);
+		// use the size of the height map as the size of the terrain
+		int terrainSize = heightMap.getSize();
+		// specify terrain origin so heightmap (0,0) is at world origin
+		float cornerHeight =
+				heightMap.getTrueHeightAtPoint(0, 0) * heightScale;
+		Point3D terrainOrigin = new Point3D(0, -cornerHeight, 0);
+		// create a terrain block using the height map
+		String name = "Terrain:" + heightMap.getClass().getSimpleName();
+		TerrainBlock tb = new TerrainBlock(name, terrainSize, terrainScale,
+				heightMap.getHeightData(), terrainOrigin);
+		return tb;
+	}
 }
