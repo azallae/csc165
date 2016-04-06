@@ -32,9 +32,24 @@ import sage.input.action.IAction;
 import sage.renderer.IRenderer;
 import sage.scene.shape.Line;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import sage.terrain.*;
+import sage.texture.*;
+import sage.scene.SkyBox;
+import sage.scene.SceneNode;
+import sage.scene.Group;
+
 public class ChickenGame extends BaseGame{
 
 	private MyCharacter player;
+		
+	private IInputManager im;
+	private String gpName;
+	private String kpName;
+	private Group rootNode;
+	private SkyBox skyBox;
 
 	private ICamera camera;
 	private Camera3Pcontroller cc;
@@ -55,7 +70,7 @@ public class ChickenGame extends BaseGame{
 	private long fileLastModifiedTime = 0;
 
 	protected void initGame(){
-
+		createScene();
 		initDisplay();
 		im = getInputManager();
 		gpName = im.getFirstGamepadName();
@@ -69,6 +84,26 @@ public class ChickenGame extends BaseGame{
 		initInput();
 
 
+	}
+	//create skybox and terrain
+	private void createScene(){
+		//rootNode = new Group("Root Node");
+		skyBox = new SkyBox("world");
+      		skyBox.setZBufferStateEnabled(false);
+      		skyBox.scale(50.0f, 50.0f, 50.0f);
+		Texture w1 = TextureManager.loadTexture2D(textures + "SkyBox1.jpg");
+		Texture w2 = TextureManager.loadTexture2D(textures + "SkyBox2.jpg");
+		Texture w3 = TextureManager.loadTexture2D(textures + "SkyBox3.jpg");
+		Texture w4 = TextureManager.loadTexture2D(textures + "SkyBox4.jpg");
+		Texture w5 = TextureManager.loadTexture2D(textures + "SkyBox5.jpg");
+		Texture w6 = TextureManager.loadTexture2D(textures + "SkyBox6.jpg");
+		skyBox.setTexture(SkyBox.Face.North, w1);
+		skyBox.setTexture(SkyBox.Face.South, w3);
+		skyBox.setTexture(SkyBox.Face.West, w4);
+		skyBox.setTexture(SkyBox.Face.East, w2);
+		skyBox.setTexture(SkyBox.Face.Up, w5);
+		skyBox.setTexture(SkyBox.Face.Down, w6);
+		addGameWorldObject(skyBox);
 	}
 
 	private void initDisplay() {		
@@ -170,6 +205,12 @@ public class ChickenGame extends BaseGame{
 
 		cc.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
+		
+		//skybox move along
+		Point3D camLoc = camera.getLocation();
+      		Matrix3D camTranslation = new Matrix3D();
+      		camTranslation.translate(camLoc.getX(), camLoc.getY(), camLoc.getZ());
+      		skyBox.setLocalTranslation(camTranslation);
 	}
 
 	protected void render() { 
