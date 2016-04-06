@@ -9,7 +9,6 @@ public class Starter {
 	private static final int localPort = 6000;
 	
 	public static void main (String [] args){
-		new ChickenGame().start(); 
 		Scanner kb = new Scanner(System.in);
 		String ans = "";
 		System.out.print("Are you the host?");
