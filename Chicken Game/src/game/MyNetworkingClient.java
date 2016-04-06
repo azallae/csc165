@@ -17,6 +17,7 @@ public class MyNetworkingClient extends ChickenGame{
 	private int serverPort;
 	private ProtocolType serverProtocol;
 	private GameClientTCP thisClient;
+	private boolean connected;
 	// assumes main() gets address/port from command line
 	public MyNetworkingClient(String serverAddr, int sPort)	{ 
 		super();
@@ -25,6 +26,7 @@ public class MyNetworkingClient extends ChickenGame{
 		this.serverProtocol = ProtocolType.TCP;
 	}
 	protected void initGame(){ // items as before, plus initializing network:
+		
 		try{
 			thisClient = new GameClientTCP(InetAddress.getByName(serverAddress),
 					serverPort, serverProtocol, this); 
@@ -38,10 +40,12 @@ public class MyNetworkingClient extends ChickenGame{
 		if (thisClient != null) {
 			thisClient.sendJoinMessage(); 
 		}
+		super.initGame();
 	}
 	public void update(float time){ // same as before, plus process any packets received from server
 		//. . . .
 		if (thisClient != null) thisClient.processPackets();
+		super.update(time);
 		//. . . .
 	}
 	protected void shutdown(){
@@ -58,12 +62,15 @@ public class MyNetworkingClient extends ChickenGame{
 		} 
 	}
 	public void setIsConnected(boolean b) {
+		connected = b;
 		// TODO Auto-generated method stub
-		
+	}
+	public boolean isConnected() {
+		return connected;
 	}
 	public Point3D getPlayerPosition() {
 		// TODO Auto-generated method stub
-		return null;
+		return getPlayer().getLocation();
 	}
 	public void addGameWorldObject(SceneNode s) {
 		super.addGameWorldObject(s);

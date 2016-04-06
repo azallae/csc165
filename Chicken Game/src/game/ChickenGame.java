@@ -1,12 +1,14 @@
 package game;
 
-import java.awt.Color;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
@@ -21,6 +23,7 @@ import gameEngine.MyDisplaySystem;
 import gameEngine.Quit;
 import graphicslib3D.Matrix3D;
 import graphicslib3D.Point3D;
+import graphicslib3D.Vector3D;
 import sage.app.BaseGame;
 import sage.camera.ICamera;
 import sage.camera.JOGLCamera;
@@ -30,7 +33,14 @@ import sage.event.IEventManager;
 import sage.input.IInputManager;
 import sage.input.action.IAction;
 import sage.renderer.IRenderer;
-import sage.scene.shape.Line;
+import sage.scene.SceneNode;
+import sage.scene.state.RenderState.RenderStateType;
+import sage.scene.state.TextureState;
+import sage.terrain.AbstractHeightMap;
+import sage.terrain.ImageBasedHeightMap;
+import sage.terrain.TerrainBlock;
+import sage.texture.Texture;
+import sage.texture.TextureManager;
 
 public class ChickenGame extends BaseGame{
 
@@ -47,15 +57,17 @@ public class ChickenGame extends BaseGame{
 	private String gpName;
 	private String kpName;
 
-	private boolean displayAxis = true;
-
-	private String scriptName;
+	private String scriptName = "axisLines.js";
 	private ScriptEngine engine;
 	private File scriptFile;
 	private long fileLastModifiedTime = 0;
+	private SceneNode rootNode;
+
+	private TerrainBlock terrain;
 
 	protected void initGame(){
 
+		initScript();
 		initDisplay();
 		im = getInputManager();
 		gpName = im.getFirstGamepadName();
@@ -63,6 +75,7 @@ public class ChickenGame extends BaseGame{
 
 
 
+//		initTerrain();
 		initGameObjects();
 		initHUD();
 		initPlayers();
@@ -142,31 +155,23 @@ public class ChickenGame extends BaseGame{
 
 	private void initGameObjects() {
 		display = getDisplaySystem();
-		// TODO Auto-generated method stub
 
-		if(displayAxis  == true){
-			Point3D origin = new Point3D(0,0,0);
-			Point3D xEnd = new Point3D(100,0,0);
-			Point3D yEnd = new Point3D(0,100,0);
-			Point3D zEnd = new Point3D(0,0,100);
-			Line xAxis = new Line (origin, xEnd, Color.red, 2);
-			Line yAxis = new Line (origin, yEnd, Color.green, 2);
-			Line zAxis = new Line (origin, zEnd, Color.blue, 2);
-			addGameWorldObject(xAxis); 
-			addGameWorldObject(yAxis);
-			addGameWorldObject(zAxis);
-		}
+
 
 	}
 
 
 	public void update(float elapsedTimeMS){
 		//script
-		 long modTime = scriptFile.lastModified();
-		 if (modTime > fileLastModifiedTime)
-		 { fileLastModifiedTime = modTime;
-		 this.runScript();
-		 }
+		long modTime = scriptFile.lastModified();
+		if (modTime > fileLastModifiedTime)
+		{ fileLastModifiedTime = modTime;
+		this.runScript();
+		removeGameWorldObject(rootNode);
+		rootNode = (SceneNode) engine.get("rootNode");
+		addGameWorldObject(rootNode);
+
+		}
 
 		cc.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
@@ -209,10 +214,14 @@ public class ChickenGame extends BaseGame{
 		return player;
 	}
 	public void initScript(){
-		ScriptEngineManager factory = new ScriptEngineManager();
-		engine = factory.getEngineByName("js");
-		scriptFile = new File(scriptName);
-		this.runScript();
+		ScriptEngineManager factory = new ScriptEngineManager(); 
+		List<ScriptEngineFactory> list = factory.getEngineFactories(); 
+		engine = factory.getEngineByName("js"); 
+		scriptFile = new File(scriptName); 
+		runScript();
+		rootNode = (SceneNode) engine.get("rootNode");
+		addGameWorldObject(rootNode);
+
 	}
 
 
@@ -231,8 +240,38 @@ public class ChickenGame extends BaseGame{
 		catch (NullPointerException e4){
 			System.out.println ("Null ptr exception reading " + scriptFile + e4); }
 	}
-	
-	public void setDisplayAxis(boolean displayAxis){
-		this.displayAxis = displayAxis;
+
+
+/*	private void initTerrain()
+	{ // create height map and terrain block
+		ImageBasedHeightMap myHeightMap =
+				new ImageBasedHeightMap("height.jpg");
+		TerrainBlock imageTerrain = createTerBlock(myHeightMap);
+		// create texture and texture state to color the terrain
+		TextureState grassState;
+		Texture grassTexture = TextureManager.loadTexture2D("grass.jpg");
+		grassTexture.setApplyMode(sage.texture.Texture.ApplyMode.Replace);
+		grassState = (TextureState)
+				display.getRenderer().createRenderState(RenderStateType.Texture);
+		grassState.setTexture(grassTexture,0);
+		grassState.setEnabled(true);
+		// apply the texture to the terrain
+		imageTerrain.setRenderState(grassState);
+		addGameWorldObject(imageTerrain);
 	}
+	private TerrainBlock createTerBlock(AbstractHeightMap heightMap)
+	{ float heightScale = .005f;
+	Vector3D terrainScale = new Vector3D(.2, heightScale, .2);
+	// use the size of the height map as the size of the terrain
+	int terrainSize = heightMap.getSize();
+	// specify terrain origin so heightmap (0,0) is at world origin
+	float cornerHeight =
+			heightMap.getTrueHeightAtPoint(0, 0) * heightScale;
+	Point3D terrainOrigin = new Point3D(0, -cornerHeight, 0);
+	// create a terrain block using the height map
+	String name = "Terrain:" + heightMap.getClass().getSimpleName();
+	TerrainBlock tb = new TerrainBlock(name, terrainSize, terrainScale,
+			heightMap.getHeightData(), terrainOrigin);
+	return tb;
+	}*/
 }

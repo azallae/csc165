@@ -64,4 +64,7 @@ public class MyCharacter extends TriMesh{
 		m.translate(location.getX(), location.getY(), location.getZ());
 		setLocalTranslation(m);
 	}
+	public Point3D getLocation(){
+		return location;
+	}
 }
