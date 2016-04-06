@@ -2,8 +2,11 @@ package game;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.UUID;
 
+import graphicslib3D.Matrix3D;
 import graphicslib3D.Point3D;
+import graphicslib3D.Vector3D;
 import sage.scene.TriMesh;
 
 public class MyCharacter extends TriMesh{
@@ -38,6 +41,10 @@ public class MyCharacter extends TriMesh{
 			8,9,7,
 			6,9,7
 	};
+	protected UUID id;
+	private Point3D location;
+	
+	
 	public MyCharacter(){
 		FloatBuffer vertBuf =
 				com.jogamp.common.nio.Buffers.newDirectFloatBuffer(vrts);
@@ -48,9 +55,13 @@ public class MyCharacter extends TriMesh{
 		this.setVertexBuffer(vertBuf);
 		this.setIndexBuffer(triangleBuf); 
 		this.setColorBuffer(colorBuffer1);
+		id = UUID.randomUUID();
 	}
 	
-	public void setLocation(Point3D loc){
-		
+	public void setLocation(Point3D ghostPosition){
+		location = ghostPosition;
+		Matrix3D m = new Matrix3D();
+		m.translate(location.getX(), location.getY(), location.getZ());
+		setLocalTranslation(m);
 	}
 }

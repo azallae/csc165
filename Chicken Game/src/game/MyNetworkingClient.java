@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import game.network.GameClientTCP;
+import graphicslib3D.Point3D;
 import graphicslib3D.Vector3D;
 import sage.networking.IGameConnection.ProtocolType;
 import sage.scene.SceneNode;
@@ -60,7 +61,7 @@ public class MyNetworkingClient extends ChickenGame{
 		// TODO Auto-generated method stub
 		
 	}
-	public Vector3D getPlayerPosition() {
+	public Point3D getPlayerPosition() {
 		// TODO Auto-generated method stub
 		return null;
 	}

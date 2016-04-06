@@ -1,6 +1,14 @@
 package game;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import gameEngine.Camera3Pcontroller;
 import gameEngine.MoveBackward;
@@ -40,6 +48,11 @@ public class ChickenGame extends BaseGame{
 	private String kpName;
 
 	private boolean displayAxis = true;
+
+	private String scriptName;
+	private ScriptEngine engine;
+	private File scriptFile;
+	private long fileLastModifiedTime = 0;
 
 	protected void initGame(){
 
@@ -148,6 +161,13 @@ public class ChickenGame extends BaseGame{
 
 
 	public void update(float elapsedTimeMS){
+		//script
+		 long modTime = scriptFile.lastModified();
+		 if (modTime > fileLastModifiedTime)
+		 { fileLastModifiedTime = modTime;
+		 this.runScript();
+		 }
+
 		cc.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
 	}
@@ -185,5 +205,34 @@ public class ChickenGame extends BaseGame{
 		//...other shutdown methods here as necessary... 
 	}
 
+	public MyCharacter getPlayer(){
+		return player;
+	}
+	public void initScript(){
+		ScriptEngineManager factory = new ScriptEngineManager();
+		engine = factory.getEngineByName("js");
+		scriptFile = new File(scriptName);
+		this.runScript();
+	}
 
+
+	private void runScript(){
+		try{
+			FileReader fileReader = new FileReader(scriptFile);
+			engine.eval(fileReader);
+			fileReader.close();
+		}
+		catch (FileNotFoundException e1){
+			System.out.println(scriptFile + " not found " + e1); }
+		catch (IOException e2){
+			System.out.println("IO problem with " + scriptFile + e2); }
+		catch (ScriptException e3){
+			System.out.println("ScriptException in " + scriptFile + e3); }
+		catch (NullPointerException e4){
+			System.out.println ("Null ptr exception reading " + scriptFile + e4); }
+	}
+	
+	public void setDisplayAxis(boolean displayAxis){
+		this.displayAxis = displayAxis;
+	}
 }
