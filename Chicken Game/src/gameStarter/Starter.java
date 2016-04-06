@@ -19,6 +19,10 @@ public class Starter {
 			GameServerTCP testTCPServer = new GameServerTCP(localPort);
 			System.out.println("Your localInetAddress: " + testTCPServer.getLocalInetAddress);
 			System.out.println("Port number is: " + localPort);
+			
+			String[] msgTokens = testTCPServer.getLocalInetAddress().toString().split("/");
+			MyNetworkingGame game = new MyNetworkingGame(msgTokens[1], localPort);
+			game.start();
 		}
 		else{
 			System.out.print("You are a client.");
