@@ -25,8 +25,9 @@ public class Starter {
 			game.start();
 		}
 		else{
-			System.out.print("You are a client.");
-			MyNetworkingClient testTCPClient = new MyNetworkingClient("130.86.96.235", localPort);
+			System.out.print("You are a client. What is server IP?");
+			String serverIP = kb.nextLine();
+			MyNetworkingClient testTCPClient = new MyNetworkingClient(serverIP, localPort);
 			testTCPClient.start();
 		}
 	}
