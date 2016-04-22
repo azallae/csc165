@@ -1,6 +1,6 @@
 package game;
 
-
+import gameEngine.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -43,9 +43,15 @@ import sage.terrain.ImageBasedHeightMap;
 import sage.terrain.TerrainBlock;
 import sage.texture.Texture;
 import sage.texture.TextureManager;
+import sage.scene.shape.*;
+import sage.scene.SceneNode.CULL_MODE;
 
 import sage.model.loader.OBJLoader;
 import sage.scene.TriMesh;
+
+import sage.physics.IPhysicsEngine;
+import sage.physics.IPhysicsObject;
+import sage.physics.PhysicsEngineFactory;
 
 public class ChickenGame extends BaseGame{
 
@@ -72,8 +78,10 @@ public class ChickenGame extends BaseGame{
 	private SkyBox skyBox;
 	private String textures= "textures" + File.separator;
 	
-	OBJLoader loader = new OBJLoader();
-	TriMesh chicken = loader.loadModel("models" + File.separator + "chicken.obj");
+	private Rectangle groundPlane;
+	private IPhysicsEngine physicsEngine;
+	private IPhysicsObject playerP, groundPlaneP;
+	private boolean running = false;
 
 	protected void initGame(){
 
@@ -91,8 +99,20 @@ public class ChickenGame extends BaseGame{
 		initHUD();
 		initPlayers();
 		initInput();
+		initPhysicsSystem();
+		createSagePhysicsWorld();
+		
 
 
+	}
+	
+	private void createSagePhysicsWorld(){
+		float mass = 1.0f;
+		playerP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
+					mass, player.getWorldTransform().getValues(), 1.0f);
+					
+		player.setPhysicsObject(playerP);
+		
 	}
 	
 	private void createScene(){
@@ -162,8 +182,15 @@ public class ChickenGame extends BaseGame{
 		im.associateAction(kpName,
 				net.java.games.input.Component.Identifier.Key.ESCAPE, ESCAPE,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		IAction jPress = new JumpAction(player, this);
+		im.associateAction(kpName,
+				net.java.games.input.Component.Identifier.Button._1,
+				jPress, 
+				IInputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
 
-
+	}
+	public void setRunning(boolean x){
+		running = x;
 	}
 
 	private void initPlayers() {
@@ -175,6 +202,7 @@ public class ChickenGame extends BaseGame{
 		addGameWorldObject(player);
 		player.updateLocalBound();
 		
+		player.updateGeometricState(1.0f, true);
 
 		
 		//camera.setLocation(new Point3D(0,25,-23));
@@ -189,6 +217,19 @@ public class ChickenGame extends BaseGame{
 		camera.setPerspectiveFrustum(60, 2, 1, 1000); 
 		cc = new Camera3Pcontroller(camera, player, im, gpName);
 		// TODO Auto-generated method stub
+		
+		//ground plane
+		 
+// add a graphical Ground plane
+		groundPlane = new Rectangle();
+		groundPlane.rotate(90, new Vector3D(1,0,0));
+
+		groundPlane.scale(20, 20, 20);
+		groundPlane.translate(0, 0, 0);
+		groundPlane.setCullMode(CULL_MODE.NEVER);
+		groundPlane.updateLocalBound();
+		groundPlane.setShowBound(true);
+		addGameWorldObject(groundPlane);
 
 	}
 
@@ -212,6 +253,21 @@ public class ChickenGame extends BaseGame{
 		c.setRenderState(objTextureState); 
 		c.updateRenderStates();
 	}
+	
+	protected void initPhysicsSystem(){
+		String engine = "sage.physics.JBullet.JBulletPhysicsEngine";
+		physicsEngine = PhysicsEngineFactory.createPhysicsEngine(engine);
+		physicsEngine.initSystem();
+		float[] gravity = {0, -1f, 0};
+		physicsEngine.setGravity(gravity);
+		
+		float up[] = {0,1, 0};  // {0,1,0} is flat
+		groundPlaneP = physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
+           groundPlane.getWorldTransform().getValues(), up, 0.0f);
+		groundPlaneP.setBounciness(1.0f);
+		groundPlane.setPhysicsObject(groundPlaneP);
+	}
+	
 
 
 	public void update(float elapsedTimeMS){
@@ -235,6 +291,29 @@ public class ChickenGame extends BaseGame{
   		Matrix3D camTranslation = new Matrix3D();
   		camTranslation.translate(camLoc.getX(), camLoc.getY(), camLoc.getZ());
   		skyBox.setLocalTranslation(camTranslation);
+		
+		if(running){
+			Matrix3D rot = player.getLocalRotation();
+			Vector3D dir = new Vector3D(0,1,0);
+			dir = dir.mult(rot);
+			for(int i = 0; i < 20; i++){
+				player.translate((float)dir.getX(), (float)dir.getY() + 1f, (float)dir.getZ());
+			}
+			running = false;
+			Matrix3D mat;
+			Vector3D translateVec;
+			physicsEngine.update(20.0f);
+			for(SceneNode s : getGameWorld()){
+				if(s.getPhysicsObject() != null){
+					mat = new Matrix3D(s.getPhysicsObject().getTransform());
+               translateVec = mat.getCol(3);
+					s.getLocalTranslation().setCol(3, translateVec);
+					
+				}
+			}
+		}
+		
+		super.update(elapsedTimeMS);
 	}
 
 	protected void render() { 
