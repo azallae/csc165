@@ -36,6 +36,7 @@ import sage.renderer.IRenderer;
 import sage.scene.SceneNode;
 import sage.scene.SkyBox;
 import sage.scene.state.RenderState.RenderStateType;
+import sage.scene.state.RenderState;
 import sage.scene.state.TextureState;
 import sage.terrain.AbstractHeightMap;
 import sage.terrain.ImageBasedHeightMap;
@@ -43,9 +44,12 @@ import sage.terrain.TerrainBlock;
 import sage.texture.Texture;
 import sage.texture.TextureManager;
 
+import sage.model.loader.OBJLoader;
+import sage.scene.TriMesh;
+
 public class ChickenGame extends BaseGame{
 
-	private MyCharacter player;
+	private Chicken player;
 
 	private ICamera camera;
 	private Camera3Pcontroller cc;
@@ -67,6 +71,9 @@ public class ChickenGame extends BaseGame{
 	private TerrainBlock terrain;
 	private SkyBox skyBox;
 	private String textures= "textures" + File.separator;
+	
+	OBJLoader loader = new OBJLoader();
+	TriMesh chicken = loader.loadModel("models" + File.separator + "chicken.obj");
 
 	protected void initGame(){
 
@@ -161,7 +168,19 @@ public class ChickenGame extends BaseGame{
 
 	private void initPlayers() {
 		
-		player = new MyCharacter();
+		
+		player = new Chicken();
+		//player.scale(.30f,.30f,.30f);
+		textureObj(player, "chicken.png");
+		addGameWorldObject(player);
+		player.updateLocalBound();
+		
+
+		
+		//camera.setLocation(new Point3D(0,25,-23));
+		//camera.lookAt(new Point3D(0,0,0), new Vector3D(0,1,0));
+		
+		
 		Matrix3D p1M = player.getLocalTranslation(); 
 		player.translate(0,1f,0); 
 		player.setLocalTranslation(p1M); 
@@ -183,6 +202,15 @@ public class ChickenGame extends BaseGame{
 
 
 
+	}
+	public void textureObj(MyCharacter c, String file) {
+		Texture objTexture = TextureManager.loadTexture2D("materials" + File.separator + file); 
+		objTexture.setApplyMode(Texture.ApplyMode.Replace); 
+		TextureState objTextureState = (TextureState) display.getRenderer().createRenderState(RenderState.RenderStateType.Texture); 
+		objTextureState.setTexture(objTexture, 0); 
+		objTextureState.setEnabled(true); 
+		c.setRenderState(objTextureState); 
+		c.updateRenderStates();
 	}
 
 
