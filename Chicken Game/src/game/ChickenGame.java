@@ -160,6 +160,7 @@ public class ChickenGame extends BaseGame{
 	}
 
 	private void initPlayers() {
+		
 		player = new MyCharacter();
 		Matrix3D p1M = player.getLocalTranslation(); 
 		player.translate(0,1f,0); 
