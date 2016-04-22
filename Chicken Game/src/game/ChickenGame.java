@@ -50,6 +50,7 @@ import sage.scene.TriMesh;
 public class ChickenGame extends BaseGame{
 
 	private Chicken player;
+	private Kitty kitty;
 
 	private ICamera camera;
 	private Camera3Pcontroller cc;
@@ -74,6 +75,7 @@ public class ChickenGame extends BaseGame{
 	
 	OBJLoader loader = new OBJLoader();
 	TriMesh chicken = loader.loadModel("models" + File.separator + "chicken.obj");
+	TriMesh kittyTrimesh = loader.loadModel("models" + File.separator + "KITTY.obj");
 
 	protected void initGame(){
 
@@ -199,6 +201,14 @@ public class ChickenGame extends BaseGame{
 
 	private void initGameObjects() {
 		display = getDisplaySystem();
+		kitty = new Kitty();
+		textureObj(player, "KITTY.png");
+		addGameWorldObject(kitty);
+		kitty.updateLocalBound();
+		Matrix3D k1M = kitty.getLocalTranslation(); 
+		kitty.translate(20f,1f,20f); 
+		kitty.setLocalTranslation(k1M); 
+		addGameWorldObject(kitty); 
 
 
 
