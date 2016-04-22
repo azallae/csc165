@@ -8,43 +8,17 @@ import graphicslib3D.Matrix3D;
 import graphicslib3D.Point3D;
 import graphicslib3D.Vector3D;
 import sage.scene.TriMesh;
+import sage.scene.Model3DTriMesh;
 
-public class MyCharacter extends TriMesh{
-	private static float[] vrts = new float[] {0,1,0,	    //0
-			-1,-1,1,		//1
-			1,-1,1,			//2
-			1,-1,-1,		//3
-			-1,-1,-1,		//4
-			.25f,.25f,.25f,	//5			
-			-.25f,.25f,.25f,	//6
-			-.25f,-.25f,.25f,	//7
-			.25f,-.25f,.25f,	//8
-			0,0,3};				//9
-	private static float[] cl = new float[] {1,0,0,1,	//0
-			1,1,1,1,	//1
-			1,1,1,1,	//2
-			1,1,1,1,	//3
-			1,1,1,1,	//4
-			1,1,1,1,	//5
-			1,1,1,1,	//6
-			1,1,1,1,	//7
-			1,1,1,1,	//8
-			1,1,1,1};	//9
-	private static int[] triangles = new int[] {0,1,2,
-			0,2,3,
-			0,3,4,
-			0,4,1,
-			1,4,2,
-			4,3,2,
-			5,9,6,		//head thing
-			5,9,8,
-			8,9,7,
-			6,9,7
-	};
-	protected UUID id;
+public class MyCharacter extends Model3DTriMesh{
 	private Point3D location;
 	
+	protected UUID id;
 	
+	public MyCharacter(){
+		location = new Point3D(0,0,0);
+		id = UUID.randomUUID();}
+	/*
 	public MyCharacter(){
 		FloatBuffer vertBuf =
 				com.jogamp.common.nio.Buffers.newDirectFloatBuffer(vrts);
@@ -56,6 +30,19 @@ public class MyCharacter extends TriMesh{
 		this.setIndexBuffer(triangleBuf); 
 		this.setColorBuffer(colorBuffer1);
 		id = UUID.randomUUID();
+	}*/
+	
+	public void addModel(TriMesh m)
+	{
+		setColorBuffer(m.getColorBuffer());  
+		setFaceMaterialIndices(m.getFaceMaterialIndices()); 
+		setFaceMaterials(m.getFaceMaterials()); 
+		setIndexBuffer(m.getIndexBuffer()); 
+		setNormalBuffer(m.getNormalBuffer()); 
+		setTextureBuffer(m.getTextureBuffer()); 
+		setVertexBuffer(m.getVertexBuffer()); 
+		
+		updateLocalBound();
 	}
 	
 	public void setLocation(Point3D ghostPosition){
