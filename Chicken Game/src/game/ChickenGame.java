@@ -1,6 +1,6 @@
 package game;
 
-
+import gameEngine.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -43,9 +43,15 @@ import sage.terrain.ImageBasedHeightMap;
 import sage.terrain.TerrainBlock;
 import sage.texture.Texture;
 import sage.texture.TextureManager;
+import sage.scene.shape.*;
+import sage.scene.SceneNode.CULL_MODE;
 
 import sage.model.loader.OBJLoader;
 import sage.scene.TriMesh;
+
+import sage.physics.IPhysicsEngine;
+import sage.physics.IPhysicsObject;
+import sage.physics.PhysicsEngineFactory;
 
 public class ChickenGame extends BaseGame{
 
@@ -72,9 +78,13 @@ public class ChickenGame extends BaseGame{
 	private TerrainBlock terrain;
 	private SkyBox skyBox;
 	private String textures= "textures" + File.separator;
-	
-	OBJLoader loader = new OBJLoader();
-	TriMesh chicken = loader.loadModel("models" + File.separator + "chicken.obj");
+
+	private Rectangle groundPlane;
+	private IPhysicsEngine physicsEngine;
+	private IPhysicsObject playerP, groundPlaneP;
+	private boolean running = false;
+
+
 
 	protected void initGame(){
 
@@ -92,14 +102,32 @@ public class ChickenGame extends BaseGame{
 		initHUD();
 		initPlayers();
 		initInput();
+		initPhysicsSystem();
+		createSagePhysicsWorld();
+
 
 
 	}
-	
+
+	private void createSagePhysicsWorld(){
+		float mass = 1.0f;
+		playerP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
+				mass, player.getWorldTransform().getValues(), 1.0f);
+
+		player.setPhysicsObject(playerP);
+		float up[] = {0, 1f, 0}; // {0,1,0} is flat
+		groundPlaneP =
+				physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
+						terrain.getWorldTransform().getValues(), up, 0.0f);
+		groundPlaneP.setBounciness(1.0f);
+		terrain.setPhysicsObject(groundPlaneP);
+
+	}
+
 	private void createScene(){
 		//rootNode = new Group("Root Node");
 		skyBox = new SkyBox("world");
-      		skyBox.scale(50.0f, 50.0f, 50.0f);
+		skyBox.scale(50.0f, 50.0f, 50.0f);
 		Texture w1 = TextureManager.loadTexture2D(textures + "SkyBox1.jpg");
 		Texture w2 = TextureManager.loadTexture2D(textures + "SkyBox2.jpg");
 		Texture w3 = TextureManager.loadTexture2D(textures + "SkyBox3.jpg");
@@ -114,7 +142,6 @@ public class ChickenGame extends BaseGame{
 		skyBox.setTexture(SkyBox.Face.Down, w6);
 		addGameWorldObject(skyBox);
 	}
-
 
 	private void initDisplay() {		
 		display = createDisplaySystem(); 
@@ -138,6 +165,12 @@ public class ChickenGame extends BaseGame{
 			im.associateAction(gpName,
 					net.java.games.input.Component.Identifier.Axis.X, xAxisMove,
 					IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+			IAction jPress = new JumpAction(player, 0.01f);
+			im.associateAction(gpName,
+					net.java.games.input.Component.Identifier.Button._1,
+					jPress, 
+					IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+
 			super.update((float) 0.0);
 
 
@@ -164,32 +197,49 @@ public class ChickenGame extends BaseGame{
 				net.java.games.input.Component.Identifier.Key.ESCAPE, ESCAPE,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
+	}
 
+	public void setRunning(boolean x){
+		running = x;
 	}
 
 	private void initPlayers() {
-		
-		
+
+
 		player = new Chicken();
 		//player.scale(.30f,.30f,.30f);
 		textureObj(player, "chicken.png");
 		addGameWorldObject(player);
 		player.updateLocalBound();
-		
 
-		
+		player.updateGeometricState(1.0f, true);
+
+
 		//camera.setLocation(new Point3D(0,25,-23));
 		//camera.lookAt(new Point3D(0,0,0), new Vector3D(0,1,0));
-		
-		
+
+
 		Matrix3D p1M = player.getLocalTranslation(); 
-		player.translate(0,1f,0); 
+		player.translate(0,20f,0); 
 		player.setLocalTranslation(p1M); 
 		addGameWorldObject(player); 
 		camera = new JOGLCamera(renderer); 
 		camera.setPerspectiveFrustum(60, 2, 1, 1000); 
 		cc = new Camera3Pcontroller(camera, player, im, gpName);
 		// TODO Auto-generated method stub
+
+		//ground plane
+
+		// add a graphical Ground plane
+/*		groundPlane = new Rectangle();
+		groundPlane.rotate(90, new Vector3D(1,0,0));
+
+		groundPlane.scale(20, 20, 20);
+		groundPlane.translate(0, 0, 0);
+		groundPlane.setCullMode(CULL_MODE.NEVER);
+		groundPlane.updateLocalBound();
+		groundPlane.setShowBound(true);
+		addGameWorldObject(groundPlane);*/
 
 	}
 
@@ -205,13 +255,13 @@ public class ChickenGame extends BaseGame{
 		addGameWorldObject(kitty);
 		kitty.updateLocalBound();
 		Matrix3D k1M = kitty.getLocalTranslation(); 
-		kitty.translate(20f,1f,20f); 
+		kitty.translate(5f,1f,0f); 
 		kitty.setLocalTranslation(k1M); 
 		addGameWorldObject(kitty); 
 
 
-
 	}
+
 	public void textureObj(MyCharacter c, String file) {
 		Texture objTexture = TextureManager.loadTexture2D("materials" + File.separator + file); 
 		objTexture.setApplyMode(Texture.ApplyMode.Replace); 
@@ -222,6 +272,19 @@ public class ChickenGame extends BaseGame{
 		c.updateRenderStates();
 	}
 
+	protected void initPhysicsSystem(){
+		String engine = "sage.physics.JBullet.JBulletPhysicsEngine";
+		physicsEngine = PhysicsEngineFactory.createPhysicsEngine(engine);
+		physicsEngine.initSystem();
+		float[] gravity = {0, -20f, 0};
+		physicsEngine.setGravity(gravity);
+
+/*		float up[] = {0,1, 0};  // {0,1,0} is flat
+		groundPlaneP = physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
+				groundPlane.getWorldTransform().getValues(), up, 0.0f);
+		groundPlaneP.setBounciness(1.0f);
+		groundPlane.setPhysicsObject(groundPlaneP);*/
+	}
 
 	public void update(float elapsedTimeMS){
 		//script
@@ -235,15 +298,31 @@ public class ChickenGame extends BaseGame{
 
 		}
 
+		Matrix3D mat;
+		Vector3D translateVec;
+		physicsEngine.update(elapsedTimeMS);
+		for(SceneNode s : getGameWorld()){
+			if(s.getPhysicsObject() != null){
+				mat = new Matrix3D(s.getPhysicsObject().getTransform());
+				translateVec = mat.getCol(3);
+				s.getLocalTranslation().setCol(3, translateVec);
 
-  		
+			}
+		}
+
+
+
+		Point3D camLoc = camera.getLocation();
+		Matrix3D camTranslation = new Matrix3D();
+		camTranslation.translate(camLoc.getX(), camLoc.getY(), camLoc.getZ());
+		skyBox.setLocalTranslation(camTranslation);
+
+
 		cc.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
-		
-		Point3D camLoc = camera.getLocation();
-  		Matrix3D camTranslation = new Matrix3D();
-  		camTranslation.translate(camLoc.getX(), camLoc.getY(), camLoc.getZ());
-  		skyBox.setLocalTranslation(camTranslation);
+
+
+		super.update(elapsedTimeMS);
 	}
 
 	protected void render() { 
@@ -282,6 +361,7 @@ public class ChickenGame extends BaseGame{
 	public MyCharacter getPlayer(){
 		return player;
 	}
+
 	public void initScript(){
 		ScriptEngineManager factory = new ScriptEngineManager(); 
 		List<ScriptEngineFactory> list = factory.getEngineFactories(); 
@@ -292,7 +372,6 @@ public class ChickenGame extends BaseGame{
 		addGameWorldObject(rootNode);
 
 	}
-
 
 	private void runScript(){
 		try{
@@ -310,12 +389,11 @@ public class ChickenGame extends BaseGame{
 			System.out.println ("Null ptr exception reading " + scriptFile + e4); }
 	}
 
-
 	private void initTerrain()
 	{ // create height map and terrain block
 		ImageBasedHeightMap myHeightMap =
 				new ImageBasedHeightMap("height.jpg");
-		TerrainBlock imageTerrain = createTerBlock(myHeightMap);
+		terrain = createTerBlock(myHeightMap);
 		// create texture and texture state to color the terrain
 		TextureState grassState;
 		Texture grassTexture = TextureManager.loadTexture2D("perfect-cloud.jpg");
@@ -325,9 +403,10 @@ public class ChickenGame extends BaseGame{
 		grassState.setTexture(grassTexture,0);
 		grassState.setEnabled(true);
 		// apply the texture to the terrain
-		imageTerrain.setRenderState(grassState);
-		addGameWorldObject(imageTerrain);
+		terrain.setRenderState(grassState);
+		addGameWorldObject(terrain);
 	}
+
 	private TerrainBlock createTerBlock(AbstractHeightMap heightMap){
 		float heightScale = .005f;
 		Vector3D terrainScale = new Vector3D(.5, heightScale, .5);
