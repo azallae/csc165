@@ -75,7 +75,6 @@ public class ChickenGame extends BaseGame{
 	
 	OBJLoader loader = new OBJLoader();
 	TriMesh chicken = loader.loadModel("models" + File.separator + "chicken.obj");
-	TriMesh kittyTrimesh = loader.loadModel("models" + File.separator + "KITTY.obj");
 
 	protected void initGame(){
 
@@ -202,7 +201,7 @@ public class ChickenGame extends BaseGame{
 	private void initGameObjects() {
 		display = getDisplaySystem();
 		kitty = new Kitty();
-		textureObj(player, "KITTY.png");
+		textureObj(kitty, "KITTY.png");
 		addGameWorldObject(kitty);
 		kitty.updateLocalBound();
 		Matrix3D k1M = kitty.getLocalTranslation(); 
