@@ -15,9 +15,11 @@ public class MyCharacter extends Model3DTriMesh{
 	
 	protected UUID id;
 	
-	public MyCharacter(){
+	public MyCharacter()
+	{
 		location = new Point3D(0,0,0);
-		id = UUID.randomUUID();}
+		id = UUID.randomUUID();
+	}
 	/*
 	public MyCharacter(){
 		FloatBuffer vertBuf =
@@ -41,6 +43,28 @@ public class MyCharacter extends Model3DTriMesh{
 		setNormalBuffer(m.getNormalBuffer()); 
 		setTextureBuffer(m.getTextureBuffer()); 
 		setVertexBuffer(m.getVertexBuffer()); 
+		
+		updateLocalBound();
+	}
+	
+	public void addModel(Model3DTriMesh model)
+	{
+		setAnimatedNormals(model.getAnimatedNormals()); 
+		setAnimatedVertices(model.getAnimatedVertices()); 
+		setAnimations(model.getAnimations()); 
+		setJoints(model.getJoints()); 
+	    setShaderProgram(model.getShaderProgram()); 
+		setTextureFilename(model.getTextureFileName()); 
+		setVertexBoneIDs(model.getVertexBoneIDs()); 
+		setVertexBoneWeights(model.getVertexBoneWeights());
+		
+		setColorBuffer(model.getColorBuffer());  
+		setFaceMaterialIndices(model.getFaceMaterialIndices()); 
+		setFaceMaterials(model.getFaceMaterials()); 
+		setIndexBuffer(model.getIndexBuffer()); 
+		setNormalBuffer(model.getNormalBuffer()); 
+		setTextureBuffer(model.getTextureBuffer()); 
+		setVertexBuffer(model.getVertexBuffer()); 
 		
 		updateLocalBound();
 	}

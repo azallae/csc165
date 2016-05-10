@@ -25,6 +25,12 @@ import graphicslib3D.Matrix3D;
 import graphicslib3D.Point3D;
 import graphicslib3D.Vector3D;
 import sage.app.BaseGame;
+import sage.audio.AudioManagerFactory;
+import sage.audio.AudioResource;
+import sage.audio.AudioResourceType;
+import sage.audio.IAudioManager;
+import sage.audio.Sound;
+import sage.audio.SoundType;
 import sage.camera.ICamera;
 import sage.camera.JOGLCamera;
 import sage.display.IDisplaySystem;
@@ -79,10 +85,12 @@ public class ChickenGame extends BaseGame{
 	private SkyBox skyBox;
 	private String textures= "textures" + File.separator;
 
-	private Rectangle groundPlane;
 	private IPhysicsEngine physicsEngine;
 	private IPhysicsObject playerP, groundPlaneP;
-	private boolean running = false;
+
+	private IAudioManager audioMgr;
+	private Sound chickenNoise1, catNoise1;
+	private AudioResource resource1, resource2;
 
 
 
@@ -96,7 +104,6 @@ public class ChickenGame extends BaseGame{
 
 
 		createScene();
-
 		initTerrain();
 		initGameObjects();
 		initHUD();
@@ -104,7 +111,7 @@ public class ChickenGame extends BaseGame{
 		initInput();
 		initPhysicsSystem();
 		createSagePhysicsWorld();
-
+		initAudio();
 
 
 	}
@@ -122,6 +129,55 @@ public class ChickenGame extends BaseGame{
 		groundPlaneP.setBounciness(1.0f);
 		terrain.setPhysicsObject(groundPlaneP);
 
+	}
+	public void initAudio(){
+
+		audioMgr = AudioManagerFactory.createAudioManager("sage.audio.joal.JOALAudioManager");
+		if(!audioMgr.initialize()){
+			System.out.println("Audio Manager failed to initialize!");
+			return;
+		}
+		resource1 = audioMgr.createAudioResource("chickenNoise.wav", AudioResourceType.AUDIO_SAMPLE);
+		resource2 = audioMgr.createAudioResource("catScream.wav", AudioResourceType.AUDIO_SAMPLE);
+		chickenNoise1 = new Sound(resource1, SoundType.SOUND_EFFECT, 100, true);
+		catNoise1 = new Sound(resource2, SoundType.SOUND_EFFECT, 100, true);
+		chickenNoise1.initialize(audioMgr);
+		catNoise1.initialize(audioMgr);
+		chickenNoise1.setMaxDistance(50.0f);
+		chickenNoise1.setMinDistance(3.0f);
+		chickenNoise1.setRollOff(5.0f);
+		chickenNoise1.setLocation(new Point3D(player.getWorldTransform().getCol(3)));
+		catNoise1.setMaxDistance(50.0f);
+		catNoise1.setMinDistance(3.0f);
+		catNoise1.setRollOff(5.0f);
+
+		catNoise1.setLocation(new Point3D(kitty.getWorldTransform().getCol(3)));
+		setEarParameters();
+
+		chickenNoise1.play();
+		catNoise1.play();
+	}
+
+	public void turnOffSound(){
+		chickenNoise1.release(audioMgr);
+		catNoise1.release(audioMgr);
+
+		resource1.unload();
+		resource2.unload();
+
+		audioMgr.shutdown();
+	}
+
+	@Override
+	public void exit(){
+		turnOffSound();
+		super.exit();
+	}
+
+	public void setEarParameters(){
+
+		audioMgr.getEar().setLocation(camera.getLocation());
+		audioMgr.getEar().setOrientation(new Vector3D(0,0,1), new Vector3D(0,1,0));
 	}
 
 	private void createScene(){
@@ -199,9 +255,6 @@ public class ChickenGame extends BaseGame{
 
 	}
 
-	public void setRunning(boolean x){
-		running = x;
-	}
 
 	private void initPlayers() {
 
@@ -231,7 +284,7 @@ public class ChickenGame extends BaseGame{
 		//ground plane
 
 		// add a graphical Ground plane
-/*		groundPlane = new Rectangle();
+		/*		groundPlane = new Rectangle();
 		groundPlane.rotate(90, new Vector3D(1,0,0));
 
 		groundPlane.scale(20, 20, 20);
@@ -251,13 +304,14 @@ public class ChickenGame extends BaseGame{
 	private void initGameObjects() {
 		display = getDisplaySystem();
 		kitty = new Kitty();
-		textureObj(kitty, "KITTY.png");
-		addGameWorldObject(kitty);
+		textureObj(kitty, "kitty.png");
+		addGameWorldObject(kitty); 
 		kitty.updateLocalBound();
 		Matrix3D k1M = kitty.getLocalTranslation(); 
 		kitty.translate(5f,1f,0f); 
 		kitty.setLocalTranslation(k1M); 
-		addGameWorldObject(kitty); 
+		kitty.startAnimation("KittyWalk");
+
 
 
 	}
@@ -279,7 +333,7 @@ public class ChickenGame extends BaseGame{
 		float[] gravity = {0, -20f, 0};
 		physicsEngine.setGravity(gravity);
 
-/*		float up[] = {0,1, 0};  // {0,1,0} is flat
+		/*		float up[] = {0,1, 0};  // {0,1,0} is flat
 		groundPlaneP = physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
 				groundPlane.getWorldTransform().getValues(), up, 0.0f);
 		groundPlaneP.setBounciness(1.0f);
@@ -295,9 +349,9 @@ public class ChickenGame extends BaseGame{
 		removeGameWorldObject(rootNode);
 		rootNode = (SceneNode) engine.get("rootNode");
 		addGameWorldObject(rootNode);
-
 		}
 
+		kitty.updateAnimation(elapsedTimeMS);
 		Matrix3D mat;
 		Vector3D translateVec;
 		physicsEngine.update(elapsedTimeMS);
@@ -310,6 +364,8 @@ public class ChickenGame extends BaseGame{
 			}
 		}
 
+		chickenNoise1.setLocation(new Point3D(player.getWorldTransform().getCol(3)));
+		setEarParameters();
 
 
 		Point3D camLoc = camera.getLocation();
