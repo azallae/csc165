@@ -86,7 +86,7 @@ public class ChickenGame extends BaseGame{
 	private String textures= "textures" + File.separator;
 
 	private IPhysicsEngine physicsEngine;
-	private IPhysicsObject playerP, groundPlaneP;
+	private IPhysicsObject playerP, groundPlaneP, kittyP;
 
 	private IAudioManager audioMgr;
 	private Sound chickenNoise1, catNoise1;
@@ -108,9 +108,12 @@ public class ChickenGame extends BaseGame{
 		initGameObjects();
 		initHUD();
 		initPlayers();
-		initInput();
+
+		super.update((float) 0.0);
 		initPhysicsSystem();
 		createSagePhysicsWorld();
+
+		initInput();
 		initAudio();
 
 
@@ -119,10 +122,13 @@ public class ChickenGame extends BaseGame{
 	private void createSagePhysicsWorld(){
 		float mass = 1.0f;
 		playerP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
-				mass, player.getWorldTransform().getValues(), 1.0f);
+				mass, player.getWorldTransform().getValues(), 2.3f);
+		playerP.setDamping(.9f, .9f);;;
 
 		player.setPhysicsObject(playerP);
 		float up[] = {0, 1f, 0}; // {0,1,0} is flat
+		kittyP = physicsEngine.addSphereObject(physicsEngine.nextUID(), mass, kitty.getWorldTransform().getValues(), 1f);
+		kitty.setPhysicsObject(kittyP);
 		groundPlaneP =
 				physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
 						terrain.getWorldTransform().getValues(), up, 0.0f);
@@ -212,23 +218,21 @@ public class ChickenGame extends BaseGame{
 		//controls
 		if(gpName!=null){
 			//GAMEPAD CONTROLS
-			IAction yAxisMove = new MoveYAxis(player, 0.01f);
+			IAction yAxisMove = new MoveYAxis(player,playerP, 0.01f);
 			im.associateAction(gpName,
 					net.java.games.input.Component.Identifier.Axis.Y, yAxisMove,
 					IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
-			IAction xAxisMove = new MoveXAxis(player, 0.01f);
+			IAction xAxisMove = new MoveXAxis(player, playerP, 0.01f);
 			im.associateAction(gpName,
 					net.java.games.input.Component.Identifier.Axis.X, xAxisMove,
 					IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-			IAction jPress = new JumpAction(player, 0.01f);
+			IAction jPress = new JumpAction(player, playerP, 0.01f);
 			im.associateAction(gpName,
 					net.java.games.input.Component.Identifier.Button._1,
 					jPress, 
-					IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-
-			super.update((float) 0.0);
-
+					IInputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
+			
 
 		}
 		//KEYBOARD CONTROLS
@@ -252,7 +256,7 @@ public class ChickenGame extends BaseGame{
 		im.associateAction(kpName,
 				net.java.games.input.Component.Identifier.Key.ESCAPE, ESCAPE,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-
+		super.update((float) 0.0);
 	}
 
 
@@ -262,7 +266,6 @@ public class ChickenGame extends BaseGame{
 		player = new Chicken();
 		//player.scale(.30f,.30f,.30f);
 		textureObj(player, "chicken.png");
-		addGameWorldObject(player);
 		player.updateLocalBound();
 
 		player.updateGeometricState(1.0f, true);
@@ -276,6 +279,8 @@ public class ChickenGame extends BaseGame{
 		player.translate(0,20f,0); 
 		player.setLocalTranslation(p1M); 
 		addGameWorldObject(player); 
+
+		player.translate(0,20f,0); 
 		camera = new JOGLCamera(renderer); 
 		camera.setPerspectiveFrustum(60, 2, 1, 1000); 
 		cc = new Camera3Pcontroller(camera, player, im, gpName);
@@ -330,7 +335,7 @@ public class ChickenGame extends BaseGame{
 		String engine = "sage.physics.JBullet.JBulletPhysicsEngine";
 		physicsEngine = PhysicsEngineFactory.createPhysicsEngine(engine);
 		physicsEngine.initSystem();
-		float[] gravity = {0, -20f, 0};
+		float[] gravity = {0, -100f, 0};
 		physicsEngine.setGravity(gravity);
 
 		/*		float up[] = {0,1, 0};  // {0,1,0} is flat
@@ -375,9 +380,6 @@ public class ChickenGame extends BaseGame{
 
 
 		cc.update(elapsedTimeMS);
-		super.update(elapsedTimeMS);
-
-
 		super.update(elapsedTimeMS);
 	}
 
