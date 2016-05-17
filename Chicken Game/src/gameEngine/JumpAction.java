@@ -17,7 +17,6 @@ public class JumpAction extends AbstractInputAction{
 	}
 
 	public void performAction(float time, net.java.games.input.Event e){
-		System.out.println(player.getLocalRotation());
 		if(playerP.getLinearVelocity()[1] < .1f && playerP.getLinearVelocity()[1] > -.1f){
 			Matrix3D rot = player.getLocalRotation(); 
 			Vector3D dir = new Vector3D(0,200f,0); 

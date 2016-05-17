@@ -2,6 +2,8 @@ package gameEngine;
 
 
 
+import java.awt.geom.Point2D;
+
 import game.MyCharacter;
 import graphicslib3D.Matrix3D;
 import graphicslib3D.Vector3D;
@@ -25,11 +27,12 @@ public class MoveYAxis extends AbstractInputAction{
 			dir = dir.mult(rot); 
 			dir.scale((double)(speed * time)); 
 			float move[] = {(float)dir.getX() + playerP.getLinearVelocity()[0],(float)dir.getY()+playerP.getLinearVelocity()[1],(float)dir.getZ()+playerP.getLinearVelocity()[2]};
-			if(move[0] > 30){
-				move[0] = 30f;
-			}
-			if(move[2] > 30){
-				move[2] = 30f;
+			Point2D.Double pt = new Point2D.Double(move[0],move[2]);
+			if(pt.distance(0,0)>30f){			
+				double hyp = pt.distance(0,0);
+				double opp = move[0];
+				float theta = (float) (float)Math.asin(opp/hyp) ;
+				move[2] = (float) (Math.cos(theta)*30f);
 			}
 			playerP.setLinearVelocity(move);
 		}	
@@ -39,13 +42,19 @@ public class MoveYAxis extends AbstractInputAction{
 			dir = dir.mult(rot); 
 			dir.scale(-(double)(speed * time)); 
 			float move[] = {(float)dir.getX() + playerP.getLinearVelocity()[0],(float)dir.getY()+playerP.getLinearVelocity()[1],(float)dir.getZ()+playerP.getLinearVelocity()[2]};
-			
-			if(move[0] < -30){
+			Point2D.Double pt = new Point2D.Double(move[0],move[2]);
+			if(pt.distance(0,0)>30f){			
+				double hyp = pt.distance(0,0);
+				double opp = move[0];
+				float theta = (float) (float)Math.asin(opp/hyp) ;
+				move[2] = (float) (Math.cos(theta)*-30f);
+			}
+			/*if(move[0] < -30){
 				move[0] = -30f;
 			}
 			if(move[2] < -30){
 				move[2] = -30f;
-			}
+			}*/
 			playerP.setLinearVelocity(move);
 		}	
 	}
