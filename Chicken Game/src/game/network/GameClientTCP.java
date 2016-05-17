@@ -20,6 +20,7 @@ public class GameClientTCP extends GameConnectionClient{
 
 		this.game = game;
 		this.id = UUID.randomUUID();
+		//this.ghost = new GhostAvatar(id, new Point3D(0,0,0));
 	}
 	protected void processPacket (Object msg) {
 		// extract incoming message into substrings. Then process:
@@ -34,25 +35,34 @@ public class GameClientTCP extends GameConnectionClient{
 			if(msgTokens[1].compareTo("failure") == 0)
 				game.setIsConnected(false);
 		}
-		if(msgTokens[0].compareTo("bye") == 0) { // format: bye, remoteId
+		else if(msgTokens[0].compareTo("bye") == 0) { // format: bye, remoteId
 			UUID ghostID = UUID.fromString(msgTokens[1]);
 			removeGhostAvatar(ghostID);
 		}
-		if (msgTokens[0].compareTo("dsfr") == 0 ) { // format: create, remoteId, x,y,z or dsfr, remoteId, x,y,z
+		else if (msgTokens[0].compareTo("create")==0){
+			UUID ghostID = UUID.fromString(msgTokens[1]);
+			Point3D ghostPosition = new Point3D(Double.parseDouble(msgTokens[2]), Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4]));
+			if(ghost==null){
+				createGhostAvatar(ghostID, ghostPosition);
+			}
+		}
+		else if (msgTokens[0].compareTo("dsfr") == 0 ) { // format: create, remoteId, x,y,z or dsfr, remoteId, x,y,z
 			UUID ghostID = UUID.fromString(msgTokens[1]);
 			Point3D ghostPosition = new Point3D(Double.parseDouble(msgTokens[2])
 												,Double.parseDouble(msgTokens[3])
-												,Double.parseDouble(msgTokens[5]));
+												,Double.parseDouble(msgTokens[4]));
 			// extract ghost x,y,z, position from message, then:
-			createGhostAvatar(ghostID, ghostPosition);
+			if(ghost==null){
+				createGhostAvatar(ghostID, ghostPosition);
+			}
 		}
-		if(msgTokens[0].compareTo("wsds") == 0) { // etc….. 
+		else if(msgTokens[0].compareTo("wsds") == 0) { // etc….. 
 			Point3D pos = game.getPlayerPosition();
 			UUID remID = UUID.fromString(msgTokens[1]);
 			sendDetailsForMessage(remID, pos);
 		}
 
-		if(msgTokens[0].compareTo("move") == 0) { // etc….. 
+		else if(msgTokens[0].compareTo("move") == 0) { // etc….. 
 			UUID ghostID = UUID.fromString(msgTokens[1]); 
 			// extract ghost x,y,z, position from message, then: 
 			Point3D ghostPosition = new Point3D(Double.parseDouble(msgTokens[2]), Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4]));

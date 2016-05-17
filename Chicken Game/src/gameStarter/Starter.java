@@ -20,9 +20,9 @@ public class Starter {
 			System.out.println("Your localInetAddress: " + testTCPServer.getLocalInetAddress());
 			System.out.println("Port number is: " + localPort);
 			
-			String[] msgTokens = testTCPServer.getLocalInetAddress().toString().split("/");
-			MyNetworkingClient game = new MyNetworkingClient(msgTokens[1], localPort);
-			game.start();
+			//String[] msgTokens = testTCPServer.getLocalInetAddress().toString().split("/");
+			//MyNetworkingClient game = new MyNetworkingClient(msgTokens[1], localPort);
+			//game.start();
 		}
 		else{
 			System.out.print("You are a client. What is server IP?");
@@ -30,5 +30,6 @@ public class Starter {
 			MyNetworkingClient testTCPClient = new MyNetworkingClient(serverIP, localPort);
 			testTCPClient.start();
 		}
+		kb.close();
 	}
 }

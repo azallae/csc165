@@ -76,6 +76,10 @@ public class MyCharacter extends Model3DTriMesh{
 		setLocalTranslation(m);
 	}
 	public Point3D getLocation(){
+		location.setX(this.getLocalTranslation().elementAt(0, 0));
+		location.setY(this.getLocalTranslation().elementAt(0, 1));
+		location.setZ(this.getLocalTranslation().elementAt(0, 2));
+		
 		return location;
 	}
 }
