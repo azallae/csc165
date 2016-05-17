@@ -17,7 +17,7 @@ public class MoveXAxis extends AbstractInputAction{
 		speed = s;
 	}
 	public void performAction(float time, net.java.games.input.Event e){
-		if (e.getValue() < -0.5) {
+		if (e.getValue() < -0.2) {
 			Matrix3D rot = player.getLocalRotation(); 
 			Vector3D dir = new Vector3D(10f,0,0); 
 			dir = dir.mult(rot); 

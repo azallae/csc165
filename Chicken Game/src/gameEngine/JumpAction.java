@@ -17,19 +17,13 @@ public class JumpAction extends AbstractInputAction{
 	}
 
 	public void performAction(float time, net.java.games.input.Event e){
-		System.out.println(playerP.getLinearVelocity()[1]);
+		System.out.println(player.getLocalRotation());
 		if(playerP.getLinearVelocity()[1] < .1f && playerP.getLinearVelocity()[1] > -.1f){
 			Matrix3D rot = player.getLocalRotation(); 
-			Vector3D dir = new Vector3D(0,300f,0); 
+			Vector3D dir = new Vector3D(0,200f,0); 
 			dir = dir.mult(rot); 
 			dir.scale((double)(speed * time)); 
 			float move[] = {(float)dir.getX() + playerP.getLinearVelocity()[0],(float)dir.getY()+playerP.getLinearVelocity()[1],(float)dir.getZ()+playerP.getLinearVelocity()[2]};
-			if(move[0] > 30){
-				move[0] = 30f;
-			}
-			if(move[2] > 30){
-				move[2] = 30f;
-			}
 			playerP.setLinearVelocity(move);
 		}	
 	}

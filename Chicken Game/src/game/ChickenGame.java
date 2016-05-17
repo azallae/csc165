@@ -129,6 +129,7 @@ public class ChickenGame extends BaseGame{
 		float up[] = {0, 1f, 0}; // {0,1,0} is flat
 		kittyP = physicsEngine.addSphereObject(physicsEngine.nextUID(), mass, kitty.getWorldTransform().getValues(), 1f);
 		kitty.setPhysicsObject(kittyP);
+		kittyP.setDamping(.9f, .9f);
 		groundPlaneP =
 				physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
 						terrain.getWorldTransform().getValues(), up, 0.0f);
@@ -276,11 +277,10 @@ public class ChickenGame extends BaseGame{
 
 
 		Matrix3D p1M = player.getLocalTranslation(); 
-		player.translate(0,20f,0); 
+		player.translate(0,5f,0); 
 		player.setLocalTranslation(p1M); 
 		addGameWorldObject(player); 
 
-		player.translate(0,20f,0); 
 		camera = new JOGLCamera(renderer); 
 		camera.setPerspectiveFrustum(60, 2, 1, 1000); 
 		cc = new Camera3Pcontroller(camera, player, im, gpName);
@@ -315,7 +315,6 @@ public class ChickenGame extends BaseGame{
 		Matrix3D k1M = kitty.getLocalTranslation(); 
 		kitty.translate(5f,1f,0f); 
 		kitty.setLocalTranslation(k1M); 
-		kitty.startAnimation("KittyWalk");
 
 
 
@@ -355,7 +354,8 @@ public class ChickenGame extends BaseGame{
 		rootNode = (SceneNode) engine.get("rootNode");
 		addGameWorldObject(rootNode);
 		}
-
+		kitty.kittyMove();
+		kitty.kittyFollow(player);
 		kitty.updateAnimation(elapsedTimeMS);
 		Matrix3D mat;
 		Vector3D translateVec;
@@ -368,6 +368,7 @@ public class ChickenGame extends BaseGame{
 
 			}
 		}
+		//System.out.println(kitty.getLocalTranslation());
 
 		chickenNoise1.setLocation(new Point3D(player.getWorldTransform().getCol(3)));
 		setEarParameters();
