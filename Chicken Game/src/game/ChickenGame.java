@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.List;
 
 import javax.script.ScriptEngine;
@@ -39,6 +40,8 @@ import sage.event.IEventManager;
 import sage.input.IInputManager;
 import sage.input.action.IAction;
 import sage.renderer.IRenderer;
+import sage.scene.Controller;
+import sage.scene.Group;
 import sage.scene.SceneNode;
 import sage.scene.SkyBox;
 import sage.scene.state.RenderState.RenderStateType;
@@ -80,6 +83,9 @@ public class ChickenGame extends BaseGame{
 	private File scriptFile;
 	private long fileLastModifiedTime = 0;
 	private SceneNode rootNode;
+	
+	private Group world;
+	private BaseController controller;
 
 	private TerrainBlock terrain;
 	private SkyBox skyBox;
@@ -92,7 +98,9 @@ public class ChickenGame extends BaseGame{
 	private Sound chickenNoise1, catNoise1;
 	private AudioResource resource1, resource2;
 
-
+	public ChickenGame(){
+		
+	}
 
 	protected void initGame(){
 
@@ -101,7 +109,7 @@ public class ChickenGame extends BaseGame{
 		im = getInputManager();
 		gpName = im.getFirstGamepadName();
 		kpName = im.getKeyboardName();
-
+		controller = new BaseController();
 
 		createScene();
 		initTerrain();
@@ -123,7 +131,7 @@ public class ChickenGame extends BaseGame{
 		float mass = 1.0f;
 		playerP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
 				mass, player.getWorldTransform().getValues(), 2.3f);
-		playerP.setDamping(.9f, .9f);;;
+		playerP.setDamping(.9f, .9f);
 
 		player.setPhysicsObject(playerP);
 		float up[] = {0, 1f, 0}; // {0,1,0} is flat
@@ -390,8 +398,9 @@ public class ChickenGame extends BaseGame{
 	}
 
 	private IDisplaySystem createDisplaySystem() { 
-		IDisplaySystem display = new MyDisplaySystem(700, 300, 24, 20, true, "sage.renderer.jogl.JOGLRenderer"); 
+		IDisplaySystem display = new MyDisplaySystem(1400, 800, 24, 20, false, "sage.renderer.jogl.JOGLRenderer"); 
 		System.out.print("\nWaiting for display creation..."); 
+		display.setTitle("The Last Chicken Wins");
 		int count = 0; 
 
 		// wait until display creation completes or a timeout occurs 
@@ -417,8 +426,10 @@ public class ChickenGame extends BaseGame{
 		//...other shutdown methods here as necessary... 
 	}
 
-	public MyCharacter getPlayer(){
-		return player;
+	public Point3D getPlayer(){
+
+		System.out.println(player.getLocation());
+		return player.getLocation();
 	}
 
 	public void initScript(){
@@ -463,7 +474,14 @@ public class ChickenGame extends BaseGame{
 		grassState.setEnabled(true);
 		// apply the texture to the terrain
 		terrain.setRenderState(grassState);
-		addGameWorldObject(terrain);
+		world = new Group();
+		world.addChild(terrain);
+		addGameWorldObject(world);
+	}
+	
+	private void startControls(){
+		world.addController(controller);
+		controller.addControlledNode(world);
 	}
 
 	private TerrainBlock createTerBlock(AbstractHeightMap heightMap){

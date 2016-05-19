@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import game.network.GameClientTCP;
 import graphicslib3D.Point3D;
 import graphicslib3D.Vector3D;
+import sage.app.BaseGame;
 import sage.networking.IGameConnection.ProtocolType;
 import sage.scene.SceneNode;
 
@@ -18,6 +19,7 @@ public class MyNetworkingClient extends ChickenGame{
 	private ProtocolType serverProtocol;
 	private GameClientTCP thisClient;
 	private boolean connected;
+	private Point3D lastPos;
 	// assumes main() gets address/port from command line
 	public MyNetworkingClient(String serverAddr, int sPort)	{ 
 		super();
@@ -30,6 +32,7 @@ public class MyNetworkingClient extends ChickenGame{
 		try{
 			thisClient = new GameClientTCP(InetAddress.getByName(serverAddress),
 					serverPort, serverProtocol, this); 
+
 		}
 		catch (UnknownHostException e) {
 			e.printStackTrace(); 
@@ -41,10 +44,17 @@ public class MyNetworkingClient extends ChickenGame{
 			thisClient.sendJoinMessage(); 
 		}
 		super.initGame();
+		lastPos = getPlayerPosition();
 	}
 	public void update(float time){ // same as before, plus process any packets received from server
 		//. . . .
-		if (thisClient != null) thisClient.processPackets();
+		if (thisClient != null) {
+			thisClient.processPackets();
+			if(lastPos != getPlayerPosition()){
+				thisClient.sendMoveMessage(getPlayerPosition());
+				lastPos = getPlayerPosition();
+			}
+		}
 		super.update(time);
 		//. . . .
 	}
@@ -70,7 +80,7 @@ public class MyNetworkingClient extends ChickenGame{
 	}
 	public Point3D getPlayerPosition() {
 		// TODO Auto-generated method stub
-		return getPlayer().getLocation();
+		return getPlayer();
 	}
 	public void addGameWorldObject(SceneNode s) {
 		super.addGameWorldObject(s);

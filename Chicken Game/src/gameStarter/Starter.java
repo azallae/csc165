@@ -27,8 +27,8 @@ public class Starter {
 		else{
 			System.out.print("You are a client. What is server IP?");
 			String serverIP = kb.nextLine();
-			MyNetworkingClient testTCPClient = new MyNetworkingClient(serverIP, localPort);
-			testTCPClient.start();
+			MyNetworkingClient game = new MyNetworkingClient(serverIP, localPort);
+			game.start();
 		}
 		kb.close();
 	}

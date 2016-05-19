@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import game.GhostAvatar;
 import game.MyNetworkingClient;
+import graphicslib3D.Matrix3D;
 import graphicslib3D.Point3D;
 import sage.networking.client.GameConnectionClient;
 
@@ -25,6 +26,7 @@ public class GameClientTCP extends GameConnectionClient{
 	protected void processPacket (Object msg) {
 		// extract incoming message into substrings. Then process:
 		String message = (String) msg;
+		System.out.println(message);
 		String[] msgTokens = message.split(",");
 
 		if(msgTokens[0].compareTo("join") == 0)	{ // format: join, success or join, failure
@@ -32,7 +34,7 @@ public class GameClientTCP extends GameConnectionClient{
 				game.setIsConnected(true);
 				sendCreateMessage(game.getPlayerPosition());
 			}
-			if(msgTokens[1].compareTo("failure") == 0)
+			else if(msgTokens[1].compareTo("failure") == 0)
 				game.setIsConnected(false);
 		}
 		else if(msgTokens[0].compareTo("bye") == 0) { // format: bye, remoteId
@@ -84,7 +86,15 @@ public class GameClientTCP extends GameConnectionClient{
 	
 	private void createGhostAvatar(UUID ghostID, Point3D ghostPosition) {		
 		ghost = new GhostAvatar(ghostID, ghostPosition);
-		ghost.scale(.30f,.30f,.30f);
+		game.textureObj(ghost, "chicken.png");
+		
+		ghost.updateLocalBound();
+
+		ghost.updateGeometricState(1.0f, true);
+
+		Matrix3D p1M = ghost.getLocalTranslation(); 
+		ghost.translate(0,5f,0); 
+		ghost.setLocalTranslation(p1M); 
 		game.addGameWorldObject(ghost);
 	}
 	public void sendCreateMessage(Point3D point3d){ // format: (create, localId, x,y,z)
@@ -102,7 +112,7 @@ public class GameClientTCP extends GameConnectionClient{
 	}
 	public void sendByeMessage(){ // etc….. }
 		try{
-			String message = new String("bye, " + id.toString());
+			String message = new String("bye," + id.toString());
 			sendPacket(message);
 		}
 		catch(IOException e){ e.printStackTrace(); }
@@ -119,6 +129,13 @@ public class GameClientTCP extends GameConnectionClient{
 			e.printStackTrace();
 		}
 	}
+	/*public void sendWantsDetailsMessages(UUID remID){
+		try{
+			String message = new String("wsds," + remID.toString());
+			sendPacket(message);
+		}
+		catch(IOException e){ e.printStackTrace(); }
+	}*/
 	public void sendMoveMessage(Point3D pos){ // etc….. }
 		try { 
 			String message = new String("move," + id.toString()); 

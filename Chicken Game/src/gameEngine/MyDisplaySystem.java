@@ -57,7 +57,6 @@ public class MyDisplaySystem implements IDisplaySystem {
 	private void initScreen(DisplayMode dispMode, boolean FSRequested) { 
 		GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment(); 
 		device = environment.getDefaultScreenDevice(); 
-		
 		if (device.isFullScreenSupported() && FSRequested) { 
 			myFrame.setUndecorated(true); // suppress title bar, borders, etc. 
 			myFrame.setResizable(false); // full-screen so not resizeable 
