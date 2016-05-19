@@ -1,6 +1,8 @@
 package game;
 
 import gameEngine.*;
+
+import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -86,13 +88,23 @@ public class ChickenGame extends BaseGame{
 	
 	private Group world;
 	private BaseController controller;
+	
+	private Rectangle fencePlane1;
+	private Rectangle fencePlane2;
+	private Rectangle fencePlane3;
+	private Rectangle fencePlane4;
+	
+	private Fence [] fence = new Fence[11];
+	private Fence [] fence1 = new Fence[11];
+	private Fence [] fence2 = new Fence[11];
+	private Fence [] fence3 = new Fence[11];
 
 	private TerrainBlock terrain;
 	private SkyBox skyBox;
 	private String textures= "textures" + File.separator;
 
 	private IPhysicsEngine physicsEngine;
-	private IPhysicsObject playerP, groundPlaneP, kittyP;
+	private IPhysicsObject playerP, groundPlaneP, fenceP1, fenceP2, fenceP3, fenceP4, kittyP;
 
 	private IAudioManager audioMgr;
 	private Sound chickenNoise1, catNoise1;
@@ -288,6 +300,7 @@ public class ChickenGame extends BaseGame{
 		player.translate(0,5f,0); 
 		player.setLocalTranslation(p1M); 
 		addGameWorldObject(player); 
+		
 
 		camera = new JOGLCamera(renderer); 
 		camera.setPerspectiveFrustum(60, 2, 1, 1000); 
@@ -323,8 +336,63 @@ public class ChickenGame extends BaseGame{
 		Matrix3D k1M = kitty.getLocalTranslation(); 
 		kitty.translate(5f,1f,0f); 
 		kitty.setLocalTranslation(k1M); 
+		int counter = -80;
+		for(int i=0; i< 11; i++){
+			fence[i]= new Fence();
+			fence[i].setLocation(new Point3D(counter,0,100));
+			textureObj(fence[i], "fence.png");
+			fence[i].updateLocalBound();
+
+			fence[i].rotate(90, new Vector3D(0,1,0));
+			fence[i].updateGeometricState(1.0f, true);
+			addGameWorldObject(fence[i]); 
+			counter+=18;
+		}
+		int counter1 = -100;
+		for(int i=0; i< 11; i++){
+			fence1[i]= new Fence();
+			fence1[i].setLocation(new Point3D(counter1,0,-100));
+			textureObj(fence1[i], "fence.png");
+			fence1[i].updateLocalBound();
 		
-		
+			fence1[i].rotate(270, new Vector3D(0,1,0));
+			fence1[i].updateGeometricState(1.0f, true);
+			addGameWorldObject(fence1[i]); 
+			counter1+=18;
+		}
+		int counter2 = -100;
+		for(int i=0; i< 11; i++){
+			fence2[i]= new Fence();
+			fence2[i].setLocation(new Point3D(100,0,counter2));
+			textureObj(fence2[i], "fence.png");
+			fence2[i].updateLocalBound();
+
+			fence2[i].rotate(180, new Vector3D(0,1,0));
+			fence2[i].updateGeometricState(1.0f, true);
+			addGameWorldObject(fence2[i]); 
+			counter2+=18;
+		}
+		int counter3 = -80;
+		for(int i=0; i< 11; i++){
+			fence3[i]= new Fence();
+			fence3[i].setLocation(new Point3D(-100,0,counter3));
+			textureObj(fence3[i], "fence.png");
+			fence3[i].updateLocalBound();
+
+			//fence3[i].rotate(90, new Vector3D(0,1,0));
+			fence3[i].updateGeometricState(1.0f, true);
+			addGameWorldObject(fence3[i]); 
+			counter3+=18;
+		}
+		/*fencePlane1 = new Rectangle();
+		fencePlane1.scale(200, 20f, 200);
+		fencePlane1.translate(100, 0, 0);
+		fencePlane1.rotate(90, new Vector3D(0,1,0));
+		//fencePlane1.setRenderMode(SceneNode.RENDER_MODE.TRANSPARENT);
+		fencePlane1.setColor(Color.RED);
+		fencePlane1.updateLocalBound();
+		fencePlane1.setShowBound(true);
+		addGameWorldObject(fencePlane1);*/
 
 	}
 
@@ -345,11 +413,11 @@ public class ChickenGame extends BaseGame{
 		float[] gravity = {0, -100f, 0};
 		physicsEngine.setGravity(gravity);
 
-		/*		float up[] = {0,1, 0};  // {0,1,0} is flat
-		groundPlaneP = physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
-				groundPlane.getWorldTransform().getValues(), up, 0.0f);
-		groundPlaneP.setBounciness(1.0f);
-		groundPlane.setPhysicsObject(groundPlaneP);*/
+		/*float up[] = {1,0, 0};  // {0,1,0} is flat
+		fenceP1 = physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
+		fencePlane1.getWorldTransform().getValues(), up, 0.0f);
+		fenceP1.setBounciness(1.0f);
+		fencePlane1.setPhysicsObject(fenceP1);*/
 	}
 
 	public void update(float elapsedTimeMS){
@@ -381,6 +449,7 @@ public class ChickenGame extends BaseGame{
 		chickenNoise1.setLocation(new Point3D(player.getWorldTransform().getCol(3)));
 		setEarParameters();
 
+		super.update(elapsedTimeMS);
 
 		Point3D camLoc = camera.getLocation();
 		Matrix3D camTranslation = new Matrix3D();

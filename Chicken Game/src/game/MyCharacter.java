@@ -11,7 +11,7 @@ import sage.scene.TriMesh;
 import sage.scene.Model3DTriMesh;
 
 public class MyCharacter extends Model3DTriMesh{
-	private Point3D location;
+	protected Point3D location;
 	
 	protected UUID id;
 	
@@ -69,17 +69,23 @@ public class MyCharacter extends Model3DTriMesh{
 		updateLocalBound();
 	}
 	
+	public UUID getId(){
+		return id;
+	}
+	
 	public void setLocation(Point3D ghostPosition){
-		location = ghostPosition;
+		this.location = ghostPosition;
 		Matrix3D m = new Matrix3D();
 		m.translate(location.getX(), location.getY(), location.getZ());
 		setLocalTranslation(m);
 	}
 	public Point3D getLocation(){
-		location.setX(this.getLocalTranslation().elementAt(0, 0));
-		location.setY(this.getLocalTranslation().elementAt(0, 1));
-		location.setZ(this.getLocalTranslation().elementAt(0, 2));
-		
 		return location;
 	}
+	public void updateTranslation(){
+		Matrix3D m = new Matrix3D();
+		m.translate(location.getX(), location.getY(), location.getZ());
+		setLocalTranslation(m);
+	}
+	
 }
