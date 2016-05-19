@@ -323,8 +323,8 @@ public class ChickenGame extends BaseGame{
 		Matrix3D k1M = kitty.getLocalTranslation(); 
 		kitty.translate(5f,1f,0f); 
 		kitty.setLocalTranslation(k1M); 
-
-
+		
+		
 
 	}
 
@@ -466,7 +466,7 @@ public class ChickenGame extends BaseGame{
 		terrain = createTerBlock(myHeightMap);
 		// create texture and texture state to color the terrain
 		TextureState grassState;
-		Texture grassTexture = TextureManager.loadTexture2D("perfect-cloud.jpg");
+		Texture grassTexture = TextureManager.loadTexture2D("hay.jpg");
 		grassTexture.setApplyMode(sage.texture.Texture.ApplyMode.Replace);
 		grassState = (TextureState)
 				display.getRenderer().createRenderState(RenderStateType.Texture);
@@ -479,11 +479,7 @@ public class ChickenGame extends BaseGame{
 		addGameWorldObject(world);
 	}
 	
-	private void startControls(){
-		world.addController(controller);
-		controller.addControlledNode(world);
-	}
-
+	
 	private TerrainBlock createTerBlock(AbstractHeightMap heightMap){
 		float heightScale = .005f;
 		Vector3D terrainScale = new Vector3D(.5, heightScale, .5);
