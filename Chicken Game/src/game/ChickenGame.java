@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +18,7 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import game.network.GameClientTCP;
 import gameEngine.Camera3Pcontroller;
 import gameEngine.MoveYAxis;
 import gameEngine.MyDisplaySystem;
@@ -34,10 +37,10 @@ import sage.camera.ICamera;
 import sage.camera.JOGLCamera;
 import sage.display.IDisplaySystem;
 import sage.event.EventManager;
-import sage.event.IEventListener;
 import sage.event.IEventManager;
 import sage.input.IInputManager;
 import sage.input.action.IAction;
+import sage.networking.IGameConnection.ProtocolType;
 import sage.renderer.IRenderer;
 import sage.scene.HUDString;
 import sage.scene.SceneNode;
@@ -50,21 +53,15 @@ import sage.terrain.ImageBasedHeightMap;
 import sage.terrain.TerrainBlock;
 import sage.texture.Texture;
 import sage.texture.TextureManager;
-import sage.scene.shape.*;
-import sage.scene.SceneNode.CULL_MODE;
-
-import sage.model.loader.OBJLoader;
-import sage.scene.TriMesh;
-
 import sage.physics.IPhysicsEngine;
 import sage.physics.IPhysicsObject;
 import sage.physics.PhysicsEngineFactory;
 
 public class ChickenGame extends BaseGame{
 
-	private Chicken player;
-	private Kitty kitty;
-	private GhostAvatar ghost;
+	protected Chicken player;
+	protected Kitty kitty;
+	protected GhostAvatar ghost;
 	private PowerUps pwrUp;
 
 	private ICamera camera;
@@ -88,8 +85,10 @@ public class ChickenGame extends BaseGame{
 	private SkyBox skyBox;
 	private String textures= "textures" + File.separator;
 
-	private IPhysicsEngine physicsEngine;
-	private IPhysicsObject playerP, groundPlaneP, kittyP, ghostP;
+	protected IPhysicsEngine physicsEngine;
+	private IPhysicsObject playerP, groundPlaneP;
+	protected IPhysicsObject kittyP;
+	private IPhysicsObject ghostP;
 
 	private IAudioManager audioMgr;
 	private Sound chickenNoise1, catNoise1;
@@ -101,12 +100,43 @@ public class ChickenGame extends BaseGame{
 	private boolean canJump = true;
 	private float powerUpRespawnTimer;
 	private boolean pwrUpIsGone;
+	private boolean ghostExists;
+	protected boolean kittyExists;
+
+	private String serverAddress;
+	private int serverPort;
+	private ProtocolType serverProtocol;
+	private GameClientTCP thisClient;
+	private boolean connected;
+	private boolean mainClient;
+	private GhostKitty gKitty;
+	// assumes main() gets address/port from command line
+	public ChickenGame(){
+		super();
+	}
+	public ChickenGame(String serverAddr, int sPort)	{ 
+		super();
+		this.serverAddress = serverAddr;
+		this.serverPort = sPort;
+		this.serverProtocol = ProtocolType.TCP;
+	}
 
 
-
-
+	@Override
 	protected void initGame(){
-
+		try{
+			thisClient = new GameClientTCP(InetAddress.getByName(serverAddress),
+					serverPort, serverProtocol, this); 
+		}
+		catch (UnknownHostException e) {
+			e.printStackTrace(); 
+		}
+		catch (IOException e) { 
+			e.printStackTrace(); 
+		}
+		if (thisClient != null) {
+			thisClient.sendJoinMessage(); 
+		}
 		initScript();
 		initDisplay();
 		im = getInputManager();
@@ -132,7 +162,7 @@ public class ChickenGame extends BaseGame{
 
 	}
 
-	private void createSagePhysicsWorld(){
+	protected void createSagePhysicsWorld(){
 		float mass = 1.0f;
 
 		playerP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
@@ -142,9 +172,11 @@ public class ChickenGame extends BaseGame{
 		player.setPhysicsObject(playerP);
 
 		float up[] = {0, 1f, 0}; // {0,1,0} is flat
-		kittyP = physicsEngine.addSphereObject(physicsEngine.nextUID(), mass, kitty.getWorldTransform().getValues(), 1f);
+
+		/*		kittyP = physicsEngine.addSphereObject(physicsEngine.nextUID(), mass, kitty.getWorldTransform().getValues(), 1f);
 		kitty.setPhysicsObject(kittyP);
-		kittyP.setDamping(.9f, .9f);
+		kittyP.setDamping(.9f, .9f);*/
+
 		groundPlaneP =
 				physicsEngine.addStaticPlaneObject(physicsEngine.nextUID(),
 						terrain.getWorldTransform().getValues(), up, 0.0f);
@@ -174,7 +206,6 @@ public class ChickenGame extends BaseGame{
 		catNoise1.setMinDistance(3.0f);
 		catNoise1.setRollOff(5.0f);
 
-		catNoise1.setLocation(new Point3D(kitty.getWorldTransform().getCol(3)));
 		setEarParameters();
 
 		chickenNoise1.play();
@@ -327,28 +358,24 @@ public class ChickenGame extends BaseGame{
 
 	}
 
-	private void initGameObjects() {
+	protected void initGameObjects() {
 		display = getDisplaySystem();
-		kitty = new Kitty();
+		/*		kitty = new Kitty();
 		textureObj(kitty, "kitty.png");
 		addGameWorldObject(kitty); 
 		kitty.updateLocalBound();
 		Matrix3D k1M = kitty.getLocalTranslation(); 
 		kitty.translate(5f,1f,0f); 
-		kitty.setLocalTranslation(k1M); 
+		kitty.setLocalTranslation(k1M); */
+
+
 
 		pwrUp = new PowerUps();
 		pwrUp.translate(20f, 3f, 20f);
 		addGameWorldObject(pwrUp);
 		pwrUpIsGone = false;
 		eventMgr.addListener(pwrUp, CrashEvent.class);
-
-
-
-
-
 	}
-
 	public void textureObj(MyCharacter c, String file) {
 		Texture objTexture = TextureManager.loadTexture2D("materials" + File.separator + file); 
 		objTexture.setApplyMode(Texture.ApplyMode.Replace); 
@@ -373,6 +400,7 @@ public class ChickenGame extends BaseGame{
 		groundPlane.setPhysicsObject(groundPlaneP);*/
 	}
 
+	@Override
 	public void update(float elapsedTimeMS){
 		//script
 		long modTime = scriptFile.lastModified();
@@ -383,27 +411,39 @@ public class ChickenGame extends BaseGame{
 			rootNode = (SceneNode) engine.get("rootNode");
 			addGameWorldObject(rootNode);
 		}
-		
+		if (thisClient != null){
+			thisClient.processPackets(); 
+			thisClient.sendMoveMessage(getPlayerPosition());
+			thisClient.sendGhostRotMessage(player.getRot());
+		}
+		if (mainClient && thisClient != null) {
+			thisClient.sendSyncKittyMessage(kitty.getLocation());
+			thisClient.sendKittyRotMessage(kitty.getRot());
+		}
 		//AI
-		kitty.kittyMove();
-		if(ghost != null){
-			Point2D.Double kittyLoc = new Point2D.Double(kitty.getLocalTranslation().elementAt(0, 3),kitty.getLocalTranslation().elementAt(2, 3));
-			Point2D.Double chickenLoc = new Point2D.Double(player.getLocalTranslation().elementAt(0, 3),player.getLocalTranslation().elementAt(2, 3));
-			Point2D.Double ghostLoc = new Point2D.Double(ghost.getLocalTranslation().elementAt(0, 3),ghost.getLocalTranslation().elementAt(2, 3));;
-			float distToChicken = (float) kittyLoc.distance(chickenLoc);
-			float distToGhost = (float) kittyLoc.distance(ghostLoc);
-			if(distToChicken < distToGhost){
-				kitty.kittyFollow(player);
-			}// CHASE PRIORITY
-			if(distToChicken > distToGhost){
-				kitty.kittyFollow(ghost);
+		if(mainClient){
+			if(kittyExists){
+				kitty.kittyMove();
+				if(ghost != null){
+					Point2D.Double kittyLoc = new Point2D.Double(kitty.getLocalTranslation().elementAt(0, 3),kitty.getLocalTranslation().elementAt(2, 3));
+					Point2D.Double chickenLoc = new Point2D.Double(player.getLocalTranslation().elementAt(0, 3),player.getLocalTranslation().elementAt(2, 3));
+					Point2D.Double ghostLoc = new Point2D.Double(ghost.getLocalTranslation().elementAt(0, 3),ghost.getLocalTranslation().elementAt(2, 3));;
+					float distToChicken = (float) kittyLoc.distance(chickenLoc);
+					float distToGhost = (float) kittyLoc.distance(ghostLoc);
+					if(distToChicken < distToGhost){
+						kitty.kittyFollow(player);
+					}// CHASE PRIORITY
+					if(distToChicken > distToGhost){
+						kitty.kittyFollow(ghost);
+					}
+				}
+				if(ghost == null)
+					kitty.kittyFollow(player);
+				kitty.updateAnimation(elapsedTimeMS);
 			}
 		}
-		if(ghost == null)
-			kitty.kittyFollow(player);
-		kitty.updateAnimation(elapsedTimeMS);
 		//END AI
-		
+
 		//PHYSICS
 		Matrix3D mat;
 		Vector3D translateVec;
@@ -437,18 +477,19 @@ public class ChickenGame extends BaseGame{
 		camTranslation.translate(camLoc.getX(), camLoc.getY(), camLoc.getZ());
 		skyBox.setLocalTranslation(camTranslation);
 		//END SKYBOX
-		
+
 		//POWER UPS
 		if (pwrUp.getWorldBound().intersects(player.getWorldBound())){
 
-				CrashEvent newCrash = new CrashEvent();
-				eventMgr.triggerEvent(newCrash);
-				isPowerUpOn = true;
-				timeStamp = time;
-				this.removeGameWorldObject(pwrUp);
-				powerUpRespawnTimer = time;
-				pwrUpIsGone = true;
-			
+			this.usePowerUp();
+			/*CrashEvent newCrash = new CrashEvent();
+			eventMgr.triggerEvent(newCrash);
+			isPowerUpOn = true;
+			timeStamp = time;
+			this.removeGameWorldObject(pwrUp);
+			powerUpRespawnTimer = time;
+			pwrUpIsGone = true;*/
+
 		}
 		if(powerUpRespawnTimer + 20000 < time && pwrUpIsGone == true){
 			this.addGameWorldObject(pwrUp);
@@ -462,7 +503,7 @@ public class ChickenGame extends BaseGame{
 			if(timeStamp + 2000 < time){
 				canJump = true;
 				isPowerUpOn = false;
-				
+
 			}
 		}
 
@@ -470,6 +511,17 @@ public class ChickenGame extends BaseGame{
 		super.update(elapsedTimeMS);
 	}
 
+	public void usePowerUp() {
+		CrashEvent newCrash = new CrashEvent();
+		eventMgr.triggerEvent(newCrash);
+		isPowerUpOn = true;
+		timeStamp = time;
+		this.removeGameWorldObject(pwrUp);
+		powerUpRespawnTimer = time;
+		pwrUpIsGone = true;
+		
+	}
+	@Override
 	protected void render() { 
 		renderer.setCamera(camera); 
 		super.render(); 
@@ -498,9 +550,20 @@ public class ChickenGame extends BaseGame{
 		return display ; 
 	} 
 
+	@Override
 	protected void shutdown() { 
 		display.close(); 
-		//...other shutdown methods here as necessary... 
+		super.shutdown();
+		if(thisClient != null){ 
+			thisClient.sendByeMessage();
+
+			try{ 
+				thisClient.shutdown();  // shutdown() is inherited
+			}
+			catch (IOException e) { 
+				e.printStackTrace(); 
+			}
+		} 
 	}
 
 	public MyCharacter getPlayer(){
@@ -571,17 +634,89 @@ public class ChickenGame extends BaseGame{
 	public void createGhostAvatar(UUID ghostID, Point3D ghostPosition){
 		ghost = new GhostAvatar(ghostID, ghostPosition);
 		textureObj(ghost, "chicken.png");
-		addGameWorldObject(ghost);float mass = 1.0f;
+		addGameWorldObject(ghost);
+
+		/*float mass = 1.0f;
 
 		ghostP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
 				mass, ghost.getWorldTransform().getValues(), 2.3f);
-		ghostP.setDamping(.9f, .9f);
-
-		ghost.setPhysicsObject(ghostP);
+		ghost.setPhysicsObject(ghostP);*/
+		ghostExists = true;
 
 	}
-	
+
+	public void moveGhostAvatar(Point3D ghostPosition){
+		/*double[] m = ghostP.getTransform();
+		m[3] = ghostPosition.getX();
+		m[7] = ghostPosition.getY();
+		m[11] = ghostPosition.getZ();
+		ghostP.setTransform(m);*/
+		ghost.move(ghostPosition);
+	}
+
+	public boolean doesGhostExist(){
+		return ghostExists;
+	}
+
 	public boolean canChickenJump(){
 		return canJump;
+	}
+	public void setIsConnected(boolean b) {
+		connected = b;
+		// TODO Auto-generated method stub
+	}
+	public boolean isConnected() {
+		return connected;
+	}
+	public Point3D getPlayerPosition() {
+		// TODO Auto-generated method stub
+		return getPlayer().getLocation();
+	}
+	public void addGameWorldObject(SceneNode s) {
+		super.addGameWorldObject(s);
+	}
+
+	public boolean removeGameWorldObject(SceneNode s) {
+		return super.removeGameWorldObject(s);
+	}
+	public void setMainClient(boolean b) {
+		mainClient = b;
+	}
+	public void moveKitty(Point3D p) {
+		gKitty.move(p);
+
+	}
+	public void rotateKitty(double[] rot) {
+		gKitty.rotateCharacter(rot);
+
+	}
+	public void rotateGhost(double[] rot) {
+		if(ghost!=null)
+			ghost.rotateCharacter(rot);
+
+	}
+	public void addKitty(){
+
+		kitty = new Kitty();
+		textureObj(kitty, "kitty.png");
+		addGameWorldObject(kitty); 
+		kitty.updateLocalBound();
+		Matrix3D k1M = kitty.getLocalTranslation(); 
+		kitty.translate(5f,1f,0f); 
+		kitty.setLocalTranslation(k1M); 
+		kittyExists = true;
+
+		kittyP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 1.0f, kitty.getWorldTransform().getValues(), 1f);
+		kitty.setPhysicsObject(kittyP);
+		kittyP.setDamping(.9f, .9f);
+
+		catNoise1.setLocation(new Point3D(kitty.getWorldTransform().getCol(3)));
+	}
+	public void addGhostKitty(){
+		gKitty = new GhostKitty();
+		textureObj(gKitty,"kitty.png");
+		addGameWorldObject(gKitty);
+		catNoise1.setLocation(new Point3D(gKitty.getWorldTransform().getCol(3)));
+		gKitty.startAnimation("Run");
 	}
 }

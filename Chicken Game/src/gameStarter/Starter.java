@@ -15,7 +15,7 @@ public class Starter {
 		System.out.print("Are you the host? y/n");
 		ans = kb.nextLine();
 		if(ans.charAt(0) == 'y'){
-			String ans2 = "";
+			/*String ans2 = "";
 			System.out.print("Single Player? y/n");
 			ans2 = kb.nextLine();
 			if(ans2.charAt(0) == 'y'){
@@ -23,22 +23,23 @@ public class Starter {
 				ChickenGame gameSolo = new ChickenGame();
 				gameSolo.start();
 			}
-			else{
+			else{*/
 				System.out.println("You are now hosting the server.");
 				GameServerTCP testTCPServer = new GameServerTCP(localPort);
 				System.out.println("Your localInetAddress: " + testTCPServer.getLocalInetAddress());
 				System.out.println("Port number is: " + localPort);
 
 				String[] msgTokens = testTCPServer.getLocalInetAddress().toString().split("/");
-				MyNetworkingClient game = new MyNetworkingClient(msgTokens[1], localPort);
+				ChickenGame game = new ChickenGame(msgTokens[1], localPort);
 				game.start();
-			}
+			//}
 		}
 		else{
 			System.out.print("You are a client. What is server IP?");
 			String serverIP = kb.nextLine();
-			MyNetworkingClient testTCPClient = new MyNetworkingClient(serverIP, localPort);
+			ChickenGame testTCPClient = new ChickenGame(serverIP, localPort);
 			testTCPClient.start();
 		}
+		kb.close();
 	}
 }

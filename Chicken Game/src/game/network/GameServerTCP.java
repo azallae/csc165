@@ -1,120 +1,237 @@
 package game.network;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.UUID;
+import graphicslib3D.Point3D;
 
-import sage.networking.server.GameConnectionServer;
-import sage.networking.server.IClientInfo;
+import java.io.IOException; 
+import java.net.InetAddress; 
+import java.util.UUID; 
+ 
 
-public class GameServerTCP extends GameConnectionServer<UUID>
-{
-	public GameServerTCP(int localPort) throws IOException
-	{super(localPort, ProtocolType.TCP);}
-	
-	public void acceptClient(IClientInfo ci, Object o){
-		String message = (String)o;
-		String[] msgTokens = message.split(",");
+import sage.networking.server.GameConnectionServer; 
+import sage.networking.server.IClientInfo; 
+
+public class GameServerTCP extends GameConnectionServer<UUID> { 
+	private UUID mainClient;
+	private boolean firstClient;
+	public GameServerTCP(int localPort) throws IOException { 
+		super(localPort, ProtocolType.TCP);
+	} 
+	 
+	public void acceptClient(IClientInfo ci, Object o) { 
+		if (getClients().size()==2) { return; } //only 2 players allowed
 		
-		if(msgTokens.length > 0){
-			if(msgTokens[0].compareTo("join")==0){
+		String message = (String)o; 
+		String[] messageTokens = message.split(","); 
+	 
+		if(messageTokens.length > 0) { 
+			if(messageTokens[0].compareTo("join") == 0)  { 
+				// format: join,localid 
+				UUID clientID = UUID.fromString(messageTokens[1]); 
+				addClient(ci, clientID);  
+				if(firstClient == false){
+					mainClient = clientID;
+					firstClient = true;
+
+					sendJoinedMessage(clientID, true, true);
+				}
+				else sendJoinedMessage(clientID, true, false);
+			} 
+		} 
+	} 
+
+	public void processPacket(Object o, InetAddress senderIP, int sndPort) { 
+		String message = (String) o; 
+		String[] msgTokens = message.split(","); 
+	 
+		if(msgTokens.length > 0) { 
+			if(msgTokens[0].compareTo("bye") == 0)  { 	
+				// format: bye,localid 
+				UUID clientID = UUID.fromString(msgTokens[1]); 
+				sendByeMessages(clientID); 
+				removeClient(clientID); 
+			} 
+	 
+			else if(msgTokens[0].compareTo("create") == 0) { // format: create,localid,x,y,z 
+				System.out.println("create message received from " + msgTokens[1]);
+				UUID clientID = UUID.fromString(msgTokens[1]); 
+				Point3D pos = new Point3D(Double.parseDouble(msgTokens[2]), Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4])); 
+				sendCreateMessages(clientID, pos); 
+				sendWantsDetailsMessages(clientID); 
+			} 
+		
+			else if(msgTokens[0].compareTo("dsfr") == 0) { 
+				System.out.println("Server recieved details from " + msgTokens[1] + " for " + msgTokens[2]);
 				UUID clientID = UUID.fromString(msgTokens[1]);
-				addClient(ci, clientID);
-				sendJoinedMessage(clientID, true);
+				UUID remID = UUID.fromString(msgTokens[2]); 
+				Point3D pos = new Point3D(Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4]), Double.parseDouble(msgTokens[5])); 
+				sendDetailsMessage(clientID, remID, pos); 
 			}
-		}
-	}
-	
-	public void processPacket(Object o, InetAddress senderIP, int sendPort)
-	{
-		String message = (String) o;
-		String[] msgTokens = message.split(",");
 		
-		if(msgTokens.length > 0){
-			if(msgTokens[0].compareTo("bye") == 0){
+			else if(msgTokens[0].compareTo("move") == 0) { 
 				UUID clientID = UUID.fromString(msgTokens[1]);
-				sendByeMessage(clientID);
-				removeClient(clientID);
+				Point3D pos = new Point3D(Double.parseDouble(msgTokens[2]), Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4]));
+				sendMoveMessages(clientID, pos);
 			}
-		}
-		
-		if(msgTokens[0].compareTo("create") == 0){
-			UUID clientID = UUID.fromString(msgTokens[1]);
-			String[] pos = {msgTokens[2], msgTokens[3], msgTokens[4]};
-			sendCreateMessages(clientID, pos);
-			sendWantsDetailsMessages(clientID);
-		}
-		
-		if(msgTokens[0].compareTo("dsfr")==0){
-			UUID clientID = UUID.fromString(msgTokens[1]);
-			UUID remoteID = UUID.fromString(msgTokens[2]);
-			String[] pos = {msgTokens[3], msgTokens[4], msgTokens[5]};
-			sendDetailsMessages(clientID, remoteID, pos);
-		}
-		
-		if(msgTokens[0].compareTo("move")==0){
-			UUID clientID = UUID.fromString(msgTokens[1]);
-			String[] pos = {msgTokens[3], msgTokens[4], msgTokens[5]};
-			sendMoveMessages(clientID, pos);
+			else if(msgTokens[0].compareTo("sync") == 0) // receive move 
+			{ 
+				UUID ghostID = UUID.fromString(msgTokens[1]);
+				// extract ghost x,y,z, position from message, then: 
+				Point3D ghostPosition = new Point3D(Double.parseDouble(msgTokens[2]), Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4]));
+				sendSyncKittyMessage(ghostID, ghostPosition);
+			} 
+			else if(msgTokens[0].compareTo("krot") == 0) // receive move 
+			{ 
+				UUID ghostID = UUID.fromString(msgTokens[1]);
+				// extract ghost x,y,z, position from message, then: 
+				double[] rot = {Double.parseDouble(msgTokens[2]), Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4]), Double.parseDouble(msgTokens[5])};
+				sendKittyRotMessage(ghostID, rot);
+			} 
+			else if(msgTokens[0].compareTo("grot") == 0) // receive move 
+			{ 
+				UUID ghostID = UUID.fromString(msgTokens[1]);
+				// extract ghost x,y,z, position from message, then: 
+				double[] rot = {Double.parseDouble(msgTokens[2]), Double.parseDouble(msgTokens[3]), Double.parseDouble(msgTokens[4]), Double.parseDouble(msgTokens[5])};
+				sendGhostRotMessage(ghostID, rot);
+			}
+			else if(msgTokens[0].compareTo("pwUp") == 0) 
+			{ 
+				UUID remID = UUID.fromString(msgTokens[1]);
+				sendPowerUpObtained(remID);
+			} 
 		}
 	}
-	
-	public void sendJoinedMessage(UUID clientID, boolean success){
-		try{
-			String message = new String("join");
-			if(success) message += "success";
-			else message += "failure";
-			sendPacket(message, clientID);
+		 
+	public void sendJoinedMessage(UUID clientID, boolean success, boolean mainClient){ 
+		// format: join, success or join, failure 
+		try { 
+			String message = new String("join,"); 
+			if (success) message += "success,"; 
+			else message += "failure,"; 
+			if (mainClient) message += "main";
+			else message += "notMain";
+			sendPacket(message, clientID); 
+		} 
+		catch (IOException e) { 
+			e.printStackTrace(); 
 		}
-		catch(IOException e){ e.printStackTrace();}
+	} 
+	 
+	public void sendCreateMessages(UUID clientID, Point3D position) { 
+		// format: create, remoteId, x, y, z 
+		try { 
+			System.out.println("create message sent to everyone except " + clientID.toString());
+			String message = new String("create," + clientID.toString()); 
+			message += "," + position.getX(); 
+			message += "," + position.getY(); 
+			message += "," + position.getZ(); 
+			forwardPacketToAll(message, clientID); 
+		} 
+		catch (IOException e)   { 
+			e.printStackTrace(); 
+		} 
+	} 
+	 
+	public void sendDetailsMessage(UUID clientID, UUID remoteId, Point3D position) { 
+		try { 
+			String message = new String("dsfr," + clientID.toString());
+			message += "," + position.getX(); 
+			message += "," + position.getY(); 
+			message += "," + position.getZ(); 
+			sendPacket(message, remoteId);
+			System.out.println("Server sent details to " + remoteId.toString() + " for " + clientID.toString());
+		} 
+		catch (IOException e) { 
+			e.printStackTrace();
+		}
+	} 
+	 
+	public void sendWantsDetailsMessages(UUID clientID) {  
+		try { 
+			String message = new String("wsds," + clientID.toString()); 
+			forwardPacketToAll(message, clientID); 
+			System.out.println("wants details message sent to everyone except " + clientID.toString());
+		} 
+		catch (IOException e) { 
+			e.printStackTrace();
+		}
+	} 
+	 
+	public void sendMoveMessages(UUID clientID, Point3D position) {  
+		try { 
+			String message = new String("move," + clientID.toString()); 
+			message += "," + position.getX(); 
+			message += "," + position.getY(); 
+			message += "," + position.getZ();
+			forwardPacketToAll(message, clientID); 
+		} 
+		catch (IOException e) { 
+			e.printStackTrace();
+		}
+	} 
+	  
+	public void sendByeMessages(UUID clientID) {  
+		try { 
+			String message = new String("bye," + clientID.toString()); 
+			forwardPacketToAll(message, clientID); 
+		} 
+		catch (IOException e) { 
+			e.printStackTrace();
+		}
 	}
-	
-	public void sendCreateMessages(UUID clientID, String[] position){
-		try{
-			String message = new String("create, " + clientID.toString());
-			message += ", " + position[0];
-			message += ", " + position[1];
-			message += ", " + position[2];
+	public void sendSyncKittyMessage(UUID clientID,Point3D pos){
+		try 
+		{ 
+			String message = new String("sync," + clientID.toString()); 
+			message += "," + pos.getX(); 
+			message += "," + pos.getY(); 
+			message += "," + pos.getZ(); 
 			forwardPacketToAll(message, clientID);
+		} 
+		catch (IOException e) 
+		{ 
+			e.printStackTrace();
 		}
-		catch(IOException e){ e.printStackTrace(); }
 	}
-	
-	public void sendMoveMessages(UUID clientID, String[] position){
-		try{
-			String message = new String("move, " + clientID.toString());
-			message += ", " + position[0];
-			message += ", " + position[1];
-			message += ", " + position[2];
+	public void sendKittyRotMessage(UUID clientID,double[] rot){
+		try 
+		{ 
+			String message = new String("krot," + clientID.toString()); 
+			message += "," + rot[0]; 
+			message += "," + rot[1]; 
+			message += "," + rot[2]; 
+			message += "," + rot[3]; 
 			forwardPacketToAll(message, clientID);
+		} 
+		catch (IOException e) 
+		{ 
+			e.printStackTrace();
 		}
-		catch(IOException e){ e.printStackTrace(); }
 	}
-	
-	public void sendDetailsMessages(UUID clientID, UUID remoteID, String[] position){
-		try{
-			String message = new String("dsfr, " + clientID.toString());
-			message += ", " + position[0];
-			message += ", " + position[1];
-			message += ", " + position[2];
-			sendPacket(message, remoteID);
-		}
-		catch(IOException e){ e.printStackTrace(); }
-	}
-	
-	public void sendWantsDetailsMessages(UUID clientID){
-		try{
-			String message = new String("wsds, " + clientID.toString());
+	public void sendGhostRotMessage(UUID clientID,double[] rot){
+		try 
+		{ 
+			String message = new String("grot," + clientID.toString()); 
+			message += "," + rot[0]; 
+			message += "," + rot[1]; 
+			message += "," + rot[2]; 
+			message += "," + rot[3]; 
 			forwardPacketToAll(message, clientID);
+		} 
+		catch (IOException e) 
+		{ 
+			e.printStackTrace();
 		}
-		catch(IOException e){ e.printStackTrace(); }
 	}
-	
-	public void sendByeMessage(UUID clientID){
-		try{
-			String message = new String("bye, " + clientID.toString());
+	public void sendPowerUpObtained(UUID clientID){
+		try 
+		{ 
+			String message = new String("pwUp," + clientID.toString()); 
 			forwardPacketToAll(message, clientID);
+		} 
+		catch (IOException e) 
+		{ 
+			e.printStackTrace();
 		}
-		catch(IOException e){ e.printStackTrace(); }
 	}
+
 }

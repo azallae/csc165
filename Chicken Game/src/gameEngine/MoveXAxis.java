@@ -36,7 +36,6 @@ public class MoveXAxis extends AbstractInputAction{
 				System.out.println(hyp);
 			}
 			
-			
 			playerP.setLinearVelocity(move);
 		}	
 		else if (e.getValue() > 0.2) {

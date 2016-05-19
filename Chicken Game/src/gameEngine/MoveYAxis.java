@@ -31,6 +31,7 @@ public class MoveYAxis extends AbstractInputAction{
 			/*if(move[2] > 15f){
 				move[2] = 15f;
 			}*/
+
 			if(pt.distance(0,0)>15f){			
 				double hyp = pt.distance(0,0);
 				double opp = move[0];

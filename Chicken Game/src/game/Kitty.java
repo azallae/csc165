@@ -41,7 +41,6 @@ public class Kitty extends MyCharacter{
 	}
 	
 	public void kittyMove(){
-
 		Matrix3D rot = this.getLocalRotation(); 
 		Vector3D dir = new Vector3D(0,0,kittySpd); 
 		dir = dir.mult(rot); 

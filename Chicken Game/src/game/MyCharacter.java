@@ -62,6 +62,26 @@ public class MyCharacter extends Model3DTriMesh{
 		setLocalTranslation(m);
 	}
 	public Point3D getLocation(){
+		location.setX(this.getLocalTranslation().elementAt(0, 3));
+		location.setY(this.getLocalTranslation().elementAt(1, 3));
+		location.setZ(this.getLocalTranslation().elementAt(2, 3));
 		return location;
 	}
+	public void rotateCharacter(double[] m){
+		Matrix3D mat = this.getLocalRotation();
+		mat.setElementAt(0, 0, m[0]);
+		mat.setElementAt(0, 2, m[1]);
+		mat.setElementAt(2, 0, m[2]);
+		mat.setElementAt(2, 2, m[3]);
+		this.setLocalRotation(mat);
+	}
+	public double[]	getRot(){
+		double[] m = new double[4];
+		m[0] = this.getLocalRotation().elementAt(0, 0);
+		m[1] = this.getLocalRotation().elementAt(0, 2);
+		m[2] = this.getLocalRotation().elementAt(2, 0);
+		m[3] = this.getLocalRotation().elementAt(2, 2);
+		return m;
+	}
+
 }
