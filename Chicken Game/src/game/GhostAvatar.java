@@ -11,5 +11,9 @@ public class GhostAvatar extends MyCharacter{
 		id = ghostID;
 		setLocation(ghostPosition);
 	}
+	
+	public void move(Point3D ghostPosition){
+		setLocation(ghostPosition);
+	}
 
 }

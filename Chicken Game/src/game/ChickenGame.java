@@ -1,11 +1,15 @@
 package game;
 
 import gameEngine.*;
+
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.List;
+import java.util.UUID;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -13,11 +17,6 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import gameEngine.Camera3Pcontroller;
-import gameEngine.MoveBackward;
-import gameEngine.MoveForward;
-import gameEngine.MoveLeft;
-import gameEngine.MoveRight;
-import gameEngine.MoveXAxis;
 import gameEngine.MoveYAxis;
 import gameEngine.MyDisplaySystem;
 import gameEngine.Quit;
@@ -35,10 +34,12 @@ import sage.camera.ICamera;
 import sage.camera.JOGLCamera;
 import sage.display.IDisplaySystem;
 import sage.event.EventManager;
+import sage.event.IEventListener;
 import sage.event.IEventManager;
 import sage.input.IInputManager;
 import sage.input.action.IAction;
 import sage.renderer.IRenderer;
+import sage.scene.HUDString;
 import sage.scene.SceneNode;
 import sage.scene.SkyBox;
 import sage.scene.state.RenderState.RenderStateType;
@@ -63,6 +64,8 @@ public class ChickenGame extends BaseGame{
 
 	private Chicken player;
 	private Kitty kitty;
+	private GhostAvatar ghost;
+	private PowerUps pwrUp;
 
 	private ICamera camera;
 	private Camera3Pcontroller cc;
@@ -86,11 +89,19 @@ public class ChickenGame extends BaseGame{
 	private String textures= "textures" + File.separator;
 
 	private IPhysicsEngine physicsEngine;
-	private IPhysicsObject playerP, groundPlaneP, kittyP;
+	private IPhysicsObject playerP, groundPlaneP, kittyP, ghostP;
 
 	private IAudioManager audioMgr;
 	private Sound chickenNoise1, catNoise1;
 	private AudioResource resource1, resource2;
+	private HUDString timeString;
+	private float time;
+	private boolean isPowerUpOn = false;
+	private float timeStamp;
+	private boolean canJump = true;
+	private float powerUpRespawnTimer;
+	private boolean pwrUpIsGone;
+
 
 
 
@@ -101,6 +112,8 @@ public class ChickenGame extends BaseGame{
 		im = getInputManager();
 		gpName = im.getFirstGamepadName();
 		kpName = im.getKeyboardName();
+
+		eventMgr = EventManager.getInstance();
 
 
 		createScene();
@@ -121,11 +134,13 @@ public class ChickenGame extends BaseGame{
 
 	private void createSagePhysicsWorld(){
 		float mass = 1.0f;
+
 		playerP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
 				mass, player.getWorldTransform().getValues(), 2.3f);
 		playerP.setDamping(.9f, .9f);;;
 
 		player.setPhysicsObject(playerP);
+
 		float up[] = {0, 1f, 0}; // {0,1,0} is flat
 		kittyP = physicsEngine.addSphereObject(physicsEngine.nextUID(), mass, kitty.getWorldTransform().getValues(), 1f);
 		kitty.setPhysicsObject(kittyP);
@@ -137,6 +152,7 @@ public class ChickenGame extends BaseGame{
 		terrain.setPhysicsObject(groundPlaneP);
 
 	}
+
 	public void initAudio(){
 
 		audioMgr = AudioManagerFactory.createAudioManager("sage.audio.joal.JOALAudioManager");
@@ -182,8 +198,8 @@ public class ChickenGame extends BaseGame{
 	}
 
 	public void setEarParameters(){
+		audioMgr.getEar().setLocation(player.getLocation());
 
-		audioMgr.getEar().setLocation(camera.getLocation());
 		audioMgr.getEar().setOrientation(new Vector3D(0,0,1), new Vector3D(0,1,0));
 	}
 
@@ -217,51 +233,52 @@ public class ChickenGame extends BaseGame{
 
 
 		//controls
-		if(gpName!=null){
-			//GAMEPAD CONTROLS
-			IAction yAxisMove = new MoveYAxis(player,playerP, 0.01f);
-			im.associateAction(gpName,
-					net.java.games.input.Component.Identifier.Axis.Y, yAxisMove,
-					IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		//GAMEPAD CONTROLS
+		IAction yAxisMove = new MoveYAxis(player,playerP, .01f);
+		im.associateAction(gpName,
+				net.java.games.input.Component.Identifier.Axis.Y, yAxisMove,
+				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
-			IAction xAxisMove = new MoveXAxis(player, playerP, 0.01f);
-			im.associateAction(gpName,
-					net.java.games.input.Component.Identifier.Axis.X, xAxisMove,
-					IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-			IAction jPress = new JumpAction(player, playerP, 0.01f);
-			im.associateAction(gpName,
-					net.java.games.input.Component.Identifier.Button._1,
-					jPress, 
-					IInputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
-			
+		/*IAction xAxisMove = new MoveXAxis(player, playerP, 1f);
+		im.associateAction(gpName,
+				net.java.games.input.Component.Identifier.Axis.X, xAxisMove,
+				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);*/
+		IAction jPress = new JumpAction(player, playerP, 0.01f, this);
+		im.associateAction(gpName,
+				net.java.games.input.Component.Identifier.Button._1,
+				jPress, 
+				IInputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
 
-		}
+
+
 		//KEYBOARD CONTROLS
-		IAction wPress = new MoveForward(player, 0.01f);
+		/*IAction wPress = new MoveForward(player[], 0.01f);
 		im.associateAction(kpName,
 				net.java.games.input.Component.Identifier.Key.W, wPress,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		IAction sPress = new MoveBackward(player, 0.01f);
+		IAction sPress = new MoveBackward(player[], 0.01f);
 		im.associateAction(kpName,
 				net.java.games.input.Component.Identifier.Key.S, sPress,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		IAction aPress = new MoveLeft(player, 0.01f);
+		IAction aPress = new MoveLeft(player[], 0.01f);
 		im.associateAction(kpName,
 				net.java.games.input.Component.Identifier.Key.A, aPress,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		IAction dPress = new MoveRight(player, 0.01f);
+		IAction dPress = new MoveRight(player[], 0.01f);
 		im.associateAction(kpName,
 				net.java.games.input.Component.Identifier.Key.D, dPress,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);*/
 		IAction ESCAPE = new Quit(this);
 		im.associateAction(kpName,
 				net.java.games.input.Component.Identifier.Key.ESCAPE, ESCAPE,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		super.update((float) 0.0);
+
 	}
 
-
 	private void initPlayers() {
+
+
 
 
 		player = new Chicken();
@@ -284,6 +301,7 @@ public class ChickenGame extends BaseGame{
 		camera = new JOGLCamera(renderer); 
 		camera.setPerspectiveFrustum(60, 2, 1, 1000); 
 		cc = new Camera3Pcontroller(camera, player, im, gpName);
+
 		// TODO Auto-generated method stub
 
 		//ground plane
@@ -302,7 +320,10 @@ public class ChickenGame extends BaseGame{
 	}
 
 	private void initHUD() {
-		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub		
+		timeString = new HUDString("Time = " + time);
+		timeString.setLocation(0,0.05); // (0,0) [lower-left] to (1,1)
+		addGameWorldObject(timeString);
 
 	}
 
@@ -315,6 +336,14 @@ public class ChickenGame extends BaseGame{
 		Matrix3D k1M = kitty.getLocalTranslation(); 
 		kitty.translate(5f,1f,0f); 
 		kitty.setLocalTranslation(k1M); 
+
+		pwrUp = new PowerUps();
+		pwrUp.translate(20f, 3f, 20f);
+		addGameWorldObject(pwrUp);
+		pwrUpIsGone = false;
+		eventMgr.addListener(pwrUp, CrashEvent.class);
+
+
 
 
 
@@ -347,16 +376,35 @@ public class ChickenGame extends BaseGame{
 	public void update(float elapsedTimeMS){
 		//script
 		long modTime = scriptFile.lastModified();
-		if (modTime > fileLastModifiedTime)
-		{ fileLastModifiedTime = modTime;
-		this.runScript();
-		removeGameWorldObject(rootNode);
-		rootNode = (SceneNode) engine.get("rootNode");
-		addGameWorldObject(rootNode);
+		if (modTime > fileLastModifiedTime){ 
+			fileLastModifiedTime = modTime;
+			this.runScript();
+			removeGameWorldObject(rootNode);
+			rootNode = (SceneNode) engine.get("rootNode");
+			addGameWorldObject(rootNode);
 		}
+		
+		//AI
 		kitty.kittyMove();
-		kitty.kittyFollow(player);
+		if(ghost != null){
+			Point2D.Double kittyLoc = new Point2D.Double(kitty.getLocalTranslation().elementAt(0, 3),kitty.getLocalTranslation().elementAt(2, 3));
+			Point2D.Double chickenLoc = new Point2D.Double(player.getLocalTranslation().elementAt(0, 3),player.getLocalTranslation().elementAt(2, 3));
+			Point2D.Double ghostLoc = new Point2D.Double(ghost.getLocalTranslation().elementAt(0, 3),ghost.getLocalTranslation().elementAt(2, 3));;
+			float distToChicken = (float) kittyLoc.distance(chickenLoc);
+			float distToGhost = (float) kittyLoc.distance(ghostLoc);
+			if(distToChicken < distToGhost){
+				kitty.kittyFollow(player);
+			}// CHASE PRIORITY
+			if(distToChicken > distToGhost){
+				kitty.kittyFollow(ghost);
+			}
+		}
+		if(ghost == null)
+			kitty.kittyFollow(player);
 		kitty.updateAnimation(elapsedTimeMS);
+		//END AI
+		
+		//PHYSICS
 		Matrix3D mat;
 		Vector3D translateVec;
 		physicsEngine.update(elapsedTimeMS);
@@ -368,17 +416,55 @@ public class ChickenGame extends BaseGame{
 
 			}
 		}
+		//END PHYSICS
 		//System.out.println(kitty.getLocalTranslation());
 
+		//TIMER
+		time += elapsedTimeMS;
+		DecimalFormat df = new DecimalFormat("0.0");
+		timeString.setText("Time = " + df.format(time/1000));
+		//END TIMER
+
+		//SOUND
 		chickenNoise1.setLocation(new Point3D(player.getWorldTransform().getCol(3)));
 		setEarParameters();
+		//END SOUND
 
 
+		//SKYBOX
 		Point3D camLoc = camera.getLocation();
 		Matrix3D camTranslation = new Matrix3D();
 		camTranslation.translate(camLoc.getX(), camLoc.getY(), camLoc.getZ());
 		skyBox.setLocalTranslation(camTranslation);
+		//END SKYBOX
+		
+		//POWER UPS
+		if (pwrUp.getWorldBound().intersects(player.getWorldBound())){
 
+				CrashEvent newCrash = new CrashEvent();
+				eventMgr.triggerEvent(newCrash);
+				isPowerUpOn = true;
+				timeStamp = time;
+				this.removeGameWorldObject(pwrUp);
+				powerUpRespawnTimer = time;
+				pwrUpIsGone = true;
+			
+		}
+		if(powerUpRespawnTimer + 20000 < time && pwrUpIsGone == true){
+			this.addGameWorldObject(pwrUp);
+			pwrUpIsGone = false;
+			//TODO translate pwrUp randomly away from chickens
+		}
+		//END POWER UPS
+		if(isPowerUpOn == true){
+
+			canJump = false;
+			if(timeStamp + 2000 < time){
+				canJump = true;
+				isPowerUpOn = false;
+				
+			}
+		}
 
 		cc.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
@@ -390,7 +476,7 @@ public class ChickenGame extends BaseGame{
 	}
 
 	private IDisplaySystem createDisplaySystem() { 
-		IDisplaySystem display = new MyDisplaySystem(700, 300, 24, 20, true, "sage.renderer.jogl.JOGLRenderer"); 
+		IDisplaySystem display = new MyDisplaySystem(800, 600, 24, 20, false, "sage.renderer.jogl.JOGLRenderer"); 
 		System.out.print("\nWaiting for display creation..."); 
 		int count = 0; 
 
@@ -480,5 +566,22 @@ public class ChickenGame extends BaseGame{
 		TerrainBlock tb = new TerrainBlock(name, terrainSize, terrainScale,
 				heightMap.getHeightData(), terrainOrigin);
 		return tb;
+	}
+
+	public void createGhostAvatar(UUID ghostID, Point3D ghostPosition){
+		ghost = new GhostAvatar(ghostID, ghostPosition);
+		textureObj(ghost, "chicken.png");
+		addGameWorldObject(ghost);float mass = 1.0f;
+
+		ghostP = physicsEngine.addSphereObject(physicsEngine.nextUID(), 
+				mass, ghost.getWorldTransform().getValues(), 2.3f);
+		ghostP.setDamping(.9f, .9f);
+
+		ghost.setPhysicsObject(ghostP);
+
+	}
+	
+	public boolean canChickenJump(){
+		return canJump;
 	}
 }

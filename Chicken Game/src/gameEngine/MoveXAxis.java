@@ -33,6 +33,7 @@ public class MoveXAxis extends AbstractInputAction{
 				double opp = move[0];
 				float theta = (float) (float)Math.asin(opp/hyp) ;
 				move[0] = (float) (Math.sin(theta)*30f);
+				System.out.println(hyp);
 			}
 			
 			
@@ -51,7 +52,7 @@ public class MoveXAxis extends AbstractInputAction{
 				double opp = move[0];
 				float theta = (float) (float)Math.asin(opp/hyp) ;
 				move[0] = (float) (Math.sin(theta)*30f);
-				System.out.println(move[0]);
+				System.out.println(hyp);
 			}
 			playerP.setLinearVelocity(move);
 		}	

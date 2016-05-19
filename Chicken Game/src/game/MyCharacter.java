@@ -1,12 +1,10 @@
 package game;
 
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
+
 import java.util.UUID;
 
 import graphicslib3D.Matrix3D;
 import graphicslib3D.Point3D;
-import graphicslib3D.Vector3D;
 import sage.scene.TriMesh;
 import sage.scene.Model3DTriMesh;
 
@@ -17,22 +15,10 @@ public class MyCharacter extends Model3DTriMesh{
 	
 	public MyCharacter()
 	{
-		location = new Point3D(0,0,0);
+		location = new Point3D(this.getLocalTranslation().elementAt(0, 3),this.getLocalTranslation().elementAt(1, 3),this.getLocalTranslation().elementAt(2, 3));
 		id = UUID.randomUUID();
 	}
-	/*
-	public MyCharacter(){
-		FloatBuffer vertBuf =
-				com.jogamp.common.nio.Buffers.newDirectFloatBuffer(vrts);
-		FloatBuffer colorBuffer1 =
-				com.jogamp.common.nio.Buffers.newDirectFloatBuffer(cl);
-		IntBuffer triangleBuf =
-				com.jogamp.common.nio.Buffers.newDirectIntBuffer(triangles);
-		this.setVertexBuffer(vertBuf);
-		this.setIndexBuffer(triangleBuf); 
-		this.setColorBuffer(colorBuffer1);
-		id = UUID.randomUUID();
-	}*/
+	
 	
 	public void addModel(TriMesh m)
 	{
@@ -76,9 +62,6 @@ public class MyCharacter extends Model3DTriMesh{
 		setLocalTranslation(m);
 	}
 	public Point3D getLocation(){
-		location.setX(this.getLocalTranslation().elementAt(0, 0));
-		location.setY(this.getLocalTranslation().elementAt(0, 1));
-		location.setZ(this.getLocalTranslation().elementAt(0, 2));
 		return location;
 	}
 }

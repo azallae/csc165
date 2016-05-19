@@ -55,10 +55,10 @@ public class Camera3Pcontroller {
 	private void setupInput(IInputManager im, String cn) { 
 		IAction turnLR = new TurnLR();
 		im.associateAction(cn,
-				net.java.games.input.Component.Identifier.Axis.RX,
+				net.java.games.input.Component.Identifier.Axis.X,
 				turnLR,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN); 
-		IAction zoomIO = new ZoomIO();
+		/*IAction zoomIO = new ZoomIO();
 		im.associateAction(cn,
 				net.java.games.input.Component.Identifier.Axis.RY,
 				zoomIO, 
@@ -82,12 +82,12 @@ public class Camera3Pcontroller {
 		im.associateAction(cn, 
 				net.java.games.input.Component.Identifier.Key.DOWN,
 				zoomOut,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);*/
 		IAction toggleDetached = new ToggleDetached();
-		im.associateAction(cn, 
+		/*im.associateAction(cn, 
 				net.java.games.input.Component.Identifier.Key.Q,
 				toggleDetached,
-				IInputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
+				IInputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);*/
 		im.associateAction(cn,
 				net.java.games.input.Component.Identifier.Button._5,
 				toggleDetached, 
@@ -108,7 +108,7 @@ public class Camera3Pcontroller {
 	
 	private class TurnLR extends AbstractInputAction { 
 		public void performAction(float time, Event evt) { 
-			float rotAmount=0.1f*time;
+			float rotAmount=0.05f*time;
 			
 			if (evt.getValue() < -0.2) {
 				cameraAzimuth += rotAmount;
@@ -126,7 +126,7 @@ public class Camera3Pcontroller {
 		}
 	}
 
-	private class OrbitAroundActionLeft extends AbstractInputAction { 
+/*	private class OrbitAroundActionLeft extends AbstractInputAction { 
 		public void performAction(float time, Event evt) { 
 			float rotAmount=1f;
 			
@@ -184,7 +184,7 @@ public class Camera3Pcontroller {
 			if (cameraDistanceFromTarget < 50)
 				cameraDistanceFromTarget += zoomAmount;	
 		}		
-	}
+	}*/
 
 	public Point3D getTargetPosition() {
 		return targetPos;

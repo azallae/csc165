@@ -16,7 +16,7 @@ import sage.scene.SceneNode;
 public class Kitty extends MyCharacter{
 	private Model3DTriMesh myObject;
 	private Group model;
-	private float kittySpd, kittyMaxSpd;
+	private float kittySpd =5f, kittyMaxSpd = 20f;
 	private boolean isWalking = true;
 	public Kitty(){
 		super();
@@ -41,24 +41,28 @@ public class Kitty extends MyCharacter{
 	}
 	
 	public void kittyMove(){
-		if(isWalking){
-			kittySpd = 1f;
-			kittyMaxSpd = 5f;
-		}
-		if(!isWalking){
-			kittySpd = 1f;
-			kittyMaxSpd = 10f;
-		}
+
 		Matrix3D rot = this.getLocalRotation(); 
 		Vector3D dir = new Vector3D(0,0,kittySpd); 
 		dir = dir.mult(rot); 
 		float move[] = {(float)dir.getX() + this.getPhysicsObject().getLinearVelocity()[0],(float)dir.getY()+this.getPhysicsObject().getLinearVelocity()[1],(float)dir.getZ()+this.getPhysicsObject().getLinearVelocity()[2]};
-		if(move[0] > kittyMaxSpd){
-			move[0] = kittyMaxSpd;
+		Point2D.Double pt = new Point2D.Double(move[0],move[2]);
+		/*if(move[2] > 15f){
+			move[2] = 15f;
+		}*/
+		if(pt.distance(0,0)>kittyMaxSpd){			
+			double hyp = pt.distance(0,0);
+			double opp = move[0];
+			float theta = (float) (float)Math.asin(opp/hyp) ;
+			move[0] = (float) (Math.sin(theta)*kittyMaxSpd);
+
+			if(move[2] > 0)
+				move[2] = (float) (Math.cos(theta)*kittyMaxSpd);
+
+			if(move[2] < 0)
+				move[2] = -(float) (Math.cos(theta)*kittyMaxSpd);
 		}
-		if(move[2] > kittyMaxSpd){
-			move[2] = kittyMaxSpd;
-		}
+		//System.out.println(move[2]);
 		this.getPhysicsObject().setLinearVelocity(move);
 
 

@@ -16,8 +16,8 @@ public class GameClientTCP extends GameConnectionClient{
 	
 	public GameClientTCP(InetAddress remAddr, int remPort, ProtocolType pType,
 			MyNetworkingClient game) throws IOException{ 
+		
 		super(remAddr, remPort, pType);
-
 		this.game = game;
 		this.id = UUID.randomUUID();
 	}
@@ -42,7 +42,7 @@ public class GameClientTCP extends GameConnectionClient{
 			UUID ghostID = UUID.fromString(msgTokens[1]);
 			Point3D ghostPosition = new Point3D(Double.parseDouble(msgTokens[2])
 												,Double.parseDouble(msgTokens[3])
-												,Double.parseDouble(msgTokens[5]));
+												,Double.parseDouble(msgTokens[4]));
 			// extract ghost x,y,z, position from message, then:
 			createGhostAvatar(ghostID, ghostPosition);
 		}
@@ -75,6 +75,7 @@ public class GameClientTCP extends GameConnectionClient{
 	private void createGhostAvatar(UUID ghostID, Point3D ghostPosition) {		
 		ghost = new GhostAvatar(ghostID, ghostPosition);
 		ghost.scale(.30f,.30f,.30f);
+		game.textureObj(ghost, "chicken.png");
 		game.addGameWorldObject(ghost);
 	}
 	public void sendCreateMessage(Point3D point3d){ // format: (create, localId, x,y,z)
