@@ -110,6 +110,7 @@ public class ChickenGame extends BaseGame{
 	private boolean connected;
 	private boolean mainClient;
 	private GhostKitty gKitty;
+	public float gameTime;
 	// assumes main() gets address/port from command line
 	public ChickenGame(){
 		super();
@@ -419,6 +420,7 @@ public class ChickenGame extends BaseGame{
 		if (mainClient && thisClient != null) {
 			thisClient.sendSyncKittyMessage(kitty.getLocation());
 			thisClient.sendKittyRotMessage(kitty.getRot());
+			//thisClient.sendTime();
 		}
 		//AI
 		if(mainClient){
@@ -441,6 +443,10 @@ public class ChickenGame extends BaseGame{
 					kitty.kittyFollow(player);
 				kitty.updateAnimation(elapsedTimeMS);
 			}
+		}
+		if(gKitty!=null){
+			gKitty.kittyRun();
+			gKitty.updateAnimation(elapsedTimeMS);
 		}
 		//END AI
 
@@ -478,6 +484,11 @@ public class ChickenGame extends BaseGame{
 		skyBox.setLocalTranslation(camTranslation);
 		//END SKYBOX
 
+		//EATING CHICKEN
+		/*if(kitty!=null && player!=null)
+			if(kitty.getWorldBound().intersects(player.getWorldBound()))
+				this.deadChicken();*/
+		//END EATING CHICKEN
 		//POWER UPS
 		if (pwrUp.getWorldBound().intersects(player.getWorldBound())){
 
@@ -509,6 +520,7 @@ public class ChickenGame extends BaseGame{
 
 		cc.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
+
 	}
 
 	public void usePowerUp() {
@@ -519,7 +531,13 @@ public class ChickenGame extends BaseGame{
 		this.removeGameWorldObject(pwrUp);
 		powerUpRespawnTimer = time;
 		pwrUpIsGone = true;
-		
+
+	}
+
+	public void deadChicken(){
+		CrashEvent newCrash = new CrashEvent();
+		eventMgr.triggerEvent(newCrash);
+		this.removeGameWorldObject(player);
 	}
 	@Override
 	protected void render() { 
@@ -702,7 +720,7 @@ public class ChickenGame extends BaseGame{
 		addGameWorldObject(kitty); 
 		kitty.updateLocalBound();
 		Matrix3D k1M = kitty.getLocalTranslation(); 
-		kitty.translate(5f,1f,0f); 
+		kitty.translate(45f,1f,0f); 
 		kitty.setLocalTranslation(k1M); 
 		kittyExists = true;
 
@@ -716,7 +734,8 @@ public class ChickenGame extends BaseGame{
 		gKitty = new GhostKitty();
 		textureObj(gKitty,"kitty.png");
 		addGameWorldObject(gKitty);
+		gKitty.translate(45f,1f,0f); 
 		catNoise1.setLocation(new Point3D(gKitty.getWorldTransform().getCol(3)));
-		gKitty.startAnimation("Run");
+		//gKitty.startAnimation("Run");
 	}
 }

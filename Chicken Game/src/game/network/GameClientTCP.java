@@ -17,6 +17,7 @@ public class GameClientTCP extends GameConnectionClient
 	private ChickenGame game; 
 	private UUID id; 
 	private GhostAvatar ghost;
+	private float time;
  
 	public GameClientTCP(InetAddress remAddr, int remPort, ProtocolType pType, ChickenGame chickenGame) throws IOException 
 	{ 
@@ -31,7 +32,7 @@ public class GameClientTCP extends GameConnectionClient
 		// extract incoming message into substrings. Then process: 
 		String message = (String) msg; 
 		String[] msgTokens = message.split(","); 
-	 
+	
 		if(msgTokens.length > 0) 
 		{ 		
 			if(msgTokens[0].compareTo("join") == 0) 
@@ -122,6 +123,12 @@ public class GameClientTCP extends GameConnectionClient
 				UUID remID = UUID.fromString(msgTokens[1]);
 				sendPowerUpUsed(remID);
 			} 
+			else if(msgTokens[0].compareTo("time") == 0) 
+			{ 
+				UUID remID = UUID.fromString(msgTokens[1]);
+				time = Float.parseFloat(msgTokens[2]);
+				updateTime(remID);
+			} 
 			
 		}
 	} 
@@ -166,6 +173,9 @@ public class GameClientTCP extends GameConnectionClient
 	}
 	private void sendPowerUpUsed(UUID remID){
 		game.usePowerUp();
+	}
+	private void updateTime(UUID remID){
+		game.update(time);
 	}
 
 	public void sendCreateMessage(Point3D pos) 
@@ -289,6 +299,17 @@ public class GameClientTCP extends GameConnectionClient
 		try 
 		{ 
 			String message = new String("pwUp," + id.toString()); 
+			sendPacket(message); 
+		} 
+		catch (IOException e) 
+		{ 
+			e.printStackTrace();
+		}
+	}
+	public void sendTime(){
+		try 
+		{ 
+			String message = new String("time," + id.toString() + "," + time); 
 			sendPacket(message); 
 		} 
 		catch (IOException e) 

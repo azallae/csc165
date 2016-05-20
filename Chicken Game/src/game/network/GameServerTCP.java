@@ -13,6 +13,7 @@ import sage.networking.server.IClientInfo;
 public class GameServerTCP extends GameConnectionServer<UUID> { 
 	private UUID mainClient;
 	private boolean firstClient;
+	private float gameTime = 0;
 	public GameServerTCP(int localPort) throws IOException { 
 		super(localPort, ProtocolType.TCP);
 	} 
@@ -96,6 +97,12 @@ public class GameServerTCP extends GameConnectionServer<UUID> {
 			else if(msgTokens[0].compareTo("pwUp") == 0) 
 			{ 
 				UUID remID = UUID.fromString(msgTokens[1]);
+				sendPowerUpObtained(remID);
+			} 
+			else if(msgTokens[0].compareTo("time") == 0) 
+			{ 
+				UUID remID = UUID.fromString(msgTokens[1]);
+				gameTime = Float.parseFloat(msgTokens[2]);
 				sendPowerUpObtained(remID);
 			} 
 		}
@@ -226,6 +233,18 @@ public class GameServerTCP extends GameConnectionServer<UUID> {
 		try 
 		{ 
 			String message = new String("pwUp," + clientID.toString()); 
+			forwardPacketToAll(message, clientID);
+		} 
+		catch (IOException e) 
+		{ 
+			e.printStackTrace();
+		}
+	}	
+	
+	public void sendTime(UUID clientID){
+		try 
+		{ 
+			String message = new String("time," + clientID.toString() + "," + gameTime); 
 			forwardPacketToAll(message, clientID);
 		} 
 		catch (IOException e) 
