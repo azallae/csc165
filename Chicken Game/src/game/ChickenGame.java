@@ -111,6 +111,10 @@ public class ChickenGame extends BaseGame{
 	private boolean mainClient;
 	private GhostKitty gKitty;
 	public float gameTime;
+	private Fence [] fence = new Fence[11];
+	 private Fence [] fence1 = new Fence[11];
+	 private Fence [] fence2 = new Fence[11];
+	 private Fence [] fence3 = new Fence[11];
 	// assumes main() gets address/port from command line
 	public ChickenGame(){
 		super();
@@ -369,7 +373,54 @@ public class ChickenGame extends BaseGame{
 		kitty.translate(5f,1f,0f); 
 		kitty.setLocalTranslation(k1M); */
 
+		int counter = -80;
+ 	for(int i=0; i< 11; i++){
+ 		fence[i]= new Fence();
+ 		fence[i].setLocation(new Point3D(counter,0,100));
+ 		textureObj(fence[i], "fence.png");
+ 		fence[i].updateLocalBound();
+ 
+ 		fence[i].rotate(90, new Vector3D(0,1,0));
+ 		fence[i].updateGeometricState(1.0f, true);
+ 		addGameWorldObject(fence[i]); 
+ 		counter+=18;
+ 	}
+ 	int counter1 = -100;
+ 	for(int i=0; i< 11; i++){
+ 		fence1[i]= new Fence();
+ 		fence1[i].setLocation(new Point3D(counter1,0,-100));
+ 		textureObj(fence1[i], "fence.png");
+ 		fence1[i].updateLocalBound();
+  				  		
+ 		fence1[i].rotate(270, new Vector3D(0,1,0));
+ 		fence1[i].updateGeometricState(1.0f, true);
+ 		addGameWorldObject(fence1[i]); 
+ 		counter1+=18;
+ 	}
+ 	int counter2 = -100;
+ 	for(int i=0; i< 11; i++){
+ 		fence2[i]= new Fence();
+ 		fence2[i].setLocation(new Point3D(100,0,counter2));
+ 		textureObj(fence2[i], "fence.png");
+ 		fence2[i].updateLocalBound();
 
+ 		fence2[i].rotate(180, new Vector3D(0,1,0));
+ 		fence2[i].updateGeometricState(1.0f, true);
+ 		addGameWorldObject(fence2[i]); 
+ 		counter2+=18;
+ 	}
+ 	int counter3 = -80;
+ 	for(int i=0; i< 11; i++){
+ 		fence3[i]= new Fence();
+ 		fence3[i].setLocation(new Point3D(-100,0,counter3));
+ 		textureObj(fence3[i], "fence.png");
+ 		fence3[i].updateLocalBound();
+
+ 		//fence3[i].rotate(90, new Vector3D(0,1,0));
+ 		fence3[i].updateGeometricState(1.0f, true);
+ 		addGameWorldObject(fence3[i]); 
+ 		counter3+=18;
+ 	}
 
 		pwrUp = new PowerUps();
 		pwrUp.translate(20f, 3f, 20f);
@@ -622,7 +673,7 @@ public class ChickenGame extends BaseGame{
 		terrain = createTerBlock(myHeightMap);
 		// create texture and texture state to color the terrain
 		TextureState grassState;
-		Texture grassTexture = TextureManager.loadTexture2D("perfect-cloud.jpg");
+		Texture grassTexture = TextureManager.loadTexture2D("hay.jpg");
 		grassTexture.setApplyMode(sage.texture.Texture.ApplyMode.Replace);
 		grassState = (TextureState)
 				display.getRenderer().createRenderState(RenderStateType.Texture);
